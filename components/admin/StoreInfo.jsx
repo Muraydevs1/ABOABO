@@ -33,6 +33,7 @@ const StoreInfo = ({store}) => {
                 <div>
                     <p className="text-slate-600 font-medium">{store.user.name}</p>
                     <p className="text-slate-400">{store.user.email}</p>
+                    <p className="text-slate-400">{store.course}</p>
                 </div>
             </div>
         </div>
