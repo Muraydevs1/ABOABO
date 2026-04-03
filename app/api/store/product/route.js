@@ -7,7 +7,7 @@ import { NextResponse } from 'next/server';
 
 // Add new product
 
-export async function GET(request) {
+export async function POST(request) {
     try{
         const {userId} = getAuth(request);
         const storeId = await authSeller(userId)
