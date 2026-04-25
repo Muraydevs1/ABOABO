@@ -1,17 +1,17 @@
-import StoreLayout from "@/components/store/StoreLayout";
+import StoreAuth from "@/app/store/StoreAuth";
 
 export const metadata = {
-    title: "GoCart. - Store Dashboard",
-    description: "GoCart. - Store Dashboard",
+    title: "AboaBo - Store Dashboard",
+    description: "AboaBo - Store Dashboard",
 };
 
 export default function RootAdminLayout({ children }) {
 
     return (
         <>
-            <StoreLayout>
+            <StoreAuth>
                 {children}
-            </StoreLayout>
+            </StoreAuth>
         </>
     );
 }

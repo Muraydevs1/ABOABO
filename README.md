@@ -67,6 +67,13 @@ You can start editing the page by modifying `app/(public)/page.js`. The page aut
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Outfit](https://vercel.com/font), a new font family for Vercel.
 
+### Mobile Money (MoMo) setup
+
+- Add `PAYSTACK_SECRET_KEY` to your environment variables.
+- Checkout uses Paystack Mobile Money for `MoMo` payment method and redirects to Paystack.
+- Configure your Paystack webhook URL to:
+  - `/api/payments/momo/webhook`
+- On successful webhook (`charge.success`), related MoMo orders are marked paid (`isPaid = true`).
 
 ---
 

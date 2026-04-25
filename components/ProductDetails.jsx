@@ -11,7 +11,7 @@ import { useDispatch, useSelector } from "react-redux";
 const ProductDetails = ({ product }) => {
 
     const productId = product.id;
-    const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '$';
+    const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || 'GH₵';
 
     const cart = useSelector(state => state.cart.cartItems);
     const dispatch = useDispatch();
@@ -71,9 +71,9 @@ const ProductDetails = ({ product }) => {
                 </div>
                 <hr className="border-gray-300 my-5" />
                 <div className="flex flex-col gap-4 text-slate-500">
-                    <p className="flex gap-3"> <EarthIcon className="text-slate-400" /> Free shipping worldwide </p>
-                    <p className="flex gap-3"> <CreditCardIcon className="text-slate-400" /> 100% Secured Payment </p>
-                    <p className="flex gap-3"> <UserIcon className="text-slate-400" /> Trusted by top brands </p>
+                    <p className="flex gap-3"> <EarthIcon className="text-slate-400" /> Free Delivery anywhere on Campus </p>
+                    <p className="flex gap-3"> <CreditCardIcon className="text-slate-400" /> 100% Secured Payment Methods </p>
+                    <p className="flex gap-3"> <UserIcon className="text-slate-400" /> Trusted Store</p>
                 </div>
 
             </div>

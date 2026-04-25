@@ -1,5 +1,6 @@
 import { imagekit } from '@/configs/imageKit';
 import { prisma } from '@/lib/prisma';
+import { validateCourseId } from '@/lib/utils/courseId';
 import {getAuth} from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 
@@ -18,26 +19,18 @@ export async function POST (request){
         const email = formData.get('email')
         const contact = formData.get('contact')
         const address = formData.get('address')
-        const course = formData.get('course').trim().toUpperCase();
+        const courseRaw = formData.get('course')
         const image = formData.get('image')
 
-        if (!name || !userName || !description || !email || !contact || !address || !image || !course){
+        const { isValid, courseId: course, error: courseIdError } = validateCourseId(courseRaw || "")
+
+        if (!name || !userName || !description || !email || !contact || !address || !image || !courseRaw){
             return NextResponse.json({error:"Missing Store Info"}, {status:400})
         }
 
-        // check CourseID length
-        if(course.length > 11){
-            NextResponse.json(
-            {error:"inValid Course Id"},
-            {status: 400})
-        }
-
-
-        // check courseID format
-        const courseIdPattern = /^[A-Z]{3}\/\d{4}\/\d{2}$/;
-        if (!courseIdPattern.test(course)){
+        if (!isValid){
             return NextResponse.json(
-                {error: "Invalid course ID format. Example: DSP/0001/23"},
+                {error: courseIdError},
                 {status:400}
             )
         }

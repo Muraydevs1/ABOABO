@@ -2,10 +2,12 @@
 import ProductCard from "@/components/ProductCard"
 import { useParams } from "next/navigation"
 import { useEffect, useState } from "react"
-import { MailIcon, MapPinIcon } from "lucide-react"
+import { MailIcon, MapPinIcon, MessageCircleIcon, PhoneCallIcon, PhoneIcon } from "lucide-react"
 import Loading from "@/components/Loading"
 import Image from "next/image"
-import { dummyStoreData, productDummyData } from "@/assets/assets"
+import toast from "react-hot-toast"
+import axios from "axios"
+
 
 export default function StoreShop() {
 
@@ -15,14 +17,27 @@ export default function StoreShop() {
     const [loading, setLoading] = useState(true)
 
     const fetchStoreData = async () => {
-        setStoreInfo(dummyStoreData)
-        setProducts(productDummyData)
+       try {
+        const {data} = await axios.get(`/api/store/data?username=${username}`)
+        setStoreInfo(data.store)
+        setProducts(data.store.products)
+       } catch (error) {
+        toast.error(error.response?.data?.error || error.message || "Failed to fetch store data")
+       } finally {
         setLoading(false)
+       }
     }
 
     useEffect(() => {
         fetchStoreData()
     }, [])
+
+    const rawContact = storeInfo?.contact?.trim() || ""
+    const telContact = rawContact.replace(/[^\d+]/g, "")
+    const whatsappContact = rawContact
+        .replace(/[^\d+]/g, "")
+        .replace(/^\+/, "")
+        .replace(/^00/, "")
 
     return !loading ? (
         <div className="min-h-[70vh] mx-6">
@@ -50,9 +65,34 @@ export default function StoreShop() {
                                 <MailIcon className="w-4 h-4 text-gray-500 mr-2" />
                                 <span>{storeInfo.email}</span>
                             </div>
-                           
+                            {rawContact && (
+                                <div className="flex items-center">
+                                    <PhoneIcon className="w-4 h-4 text-gray-500 mr-2" />
+                                    <span>{rawContact}</span>
+                                </div>
+                            )}
                         </div>
-                    </div>
+                        {rawContact && (
+                            <div className="mt-4 flex flex-wrap gap-2">
+                                <a
+                                    href={`tel:${telContact}`}
+                                    className="inline-flex items-center gap-2 rounded-md bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-700"
+                                >
+                                    <PhoneCallIcon size={14} />
+                                    Call Store
+                                </a>
+                                <a
+                                    href={`https://wa.me/${whatsappContact}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center gap-2 rounded-md bg-green-600 px-3 py-2 text-xs font-medium text-white hover:bg-green-500"
+                                >
+                                    <MessageCircleIcon size={14} />
+                                    WhatsApp
+                                </a>
+                            </div>
+                        )}
+                        </div>
                 </div>
             )}
 

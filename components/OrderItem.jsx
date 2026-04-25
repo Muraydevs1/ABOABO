@@ -12,6 +12,10 @@ const OrderItem = ({ order }) => {
     const [ratingModal, setRatingModal] = useState(null);
 
     const { ratings } = useSelector(state => state.rating);
+    const formatAddress = (address) => {
+        if (!address) return "No address provided";
+        return [address.hostel, address.campus, address.course].filter(Boolean).join(", ");
+    };
 
     return (
         <>
@@ -48,8 +52,8 @@ const OrderItem = ({ order }) => {
                 <td className="text-center max-md:hidden">{currency}{order.total}</td>
 
                 <td className="text-left max-md:hidden">
-                    <p>{order.address.name}, {order.address.street},</p>
-                    <p>{order.address.city}, {order.address.state}, {order.address.zip}, {order.address.country},</p>
+                    <p>{order.address.name}</p>
+                    <p>{formatAddress(order.address)}</p>
                     <p>{order.address.phone}</p>
                 </td>
 
@@ -70,8 +74,8 @@ const OrderItem = ({ order }) => {
             {/* Mobile */}
             <tr className="md:hidden">
                 <td colSpan={5}>
-                    <p>{order.address.name}, {order.address.street}</p>
-                    <p>{order.address.city}, {order.address.state}, {order.address.zip}, {order.address.country}</p>
+                    <p>{order.address.name}</p>
+                    <p>{formatAddress(order.address)}</p>
                     <p>{order.address.phone}</p>
                     <br />
                     <div className="flex items-center">

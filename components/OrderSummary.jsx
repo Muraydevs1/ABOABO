@@ -1,12 +1,18 @@
 import { PlusIcon, SquarePenIcon, XIcon } from 'lucide-react';
 import React, { useState } from 'react'
 import AddressModal from './AddressModal';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import { useAuth, useUser } from '@clerk/nextjs';
+import axios from 'axios';
+import { fetchCart } from '@/lib/features/cart/cartSlice';
 
 const OrderSummary = ({ totalPrice, items }) => {
 
+    const {user} = useUser();
+    const {getToken} = useAuth();
+    const dispatch = useDispatch();
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '$';
 
     const router = useRouter();
@@ -18,6 +24,8 @@ const OrderSummary = ({ totalPrice, items }) => {
     const [showAddressModal, setShowAddressModal] = useState(false);
     const [couponCodeInput, setCouponCodeInput] = useState('');
     const [coupon, setCoupon] = useState('');
+    const formatAddress = (address) =>
+        [address.hostel, address.campus, address.course].filter(Boolean).join(', ');
 
     const handleCouponCode = async (event) => {
         event.preventDefault();
@@ -26,8 +34,41 @@ const OrderSummary = ({ totalPrice, items }) => {
 
     const handlePlaceOrder = async (e) => {
         e.preventDefault();
+        try {
+            if(!user){
+                toast.error("Please login to place order")
+                return
+            }
+            if(!selectedAddress){
+                toast.error("Please select an address")
+                return
+            }
+            const token = await getToken()
 
-        router.push('/orders')
+            const orderData = {
+                addressId: selectedAddress.id,
+                items,
+                paymentMethod
+            }
+
+            const {data} = await axios.post('/api/orders', orderData, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            })
+            if (paymentMethod === 'MoMo' && data?.authorizationUrl) {
+                window.location.href = data.authorizationUrl
+            } else {
+                toast.success(data.message)
+                router.push('/orders')
+                dispatch(fetchCart({getToken}))
+            }
+        } catch (error) {
+            console.log(error)
+            toast.error(error.response?.data?.error || error.message || "Failed to place order")
+        }
+
+        
     }
 
     return (
@@ -35,19 +76,19 @@ const OrderSummary = ({ totalPrice, items }) => {
             <h2 className='text-xl font-medium text-slate-600'>Payment Summary</h2>
             <p className='text-slate-400 text-xs my-4'>Payment Method</p>
             <div className='flex gap-2 items-center'>
-                <input type="radio" id="COD" onChange={() => setPaymentMethod('COD')} checked={paymentMethod === 'COD'} className='accent-gray-500' />
-                <label htmlFor="COD" className='cursor-pointer'>COD</label>
+                <input type="radio" id="COD" name='payment' onChange={() => setPaymentMethod('COD')} checked={paymentMethod === 'COD'} className='accent-gray-500' />
+                <label htmlFor="COD" className='cursor-pointer'>Cash on Delivery</label>
             </div>
             <div className='flex gap-2 items-center mt-1'>
-                <input type="radio" id="STRIPE" name='payment' onChange={() => setPaymentMethod('STRIPE')} checked={paymentMethod === 'STRIPE'} className='accent-gray-500' />
-                <label htmlFor="STRIPE" className='cursor-pointer'>Stripe Payment</label>
+                <input type="radio" id="MOMO" name='payment' onChange={() => setPaymentMethod('MoMo')} checked={paymentMethod === 'MoMo'} className='accent-gray-500' />
+                <label htmlFor="MOMO" className='cursor-pointer'>Mobile Money (MoMo)</label>
             </div>
             <div className='my-4 py-4 border-y border-slate-200 text-slate-400'>
                 <p>Address</p>
                 {
                     selectedAddress ? (
                         <div className='flex gap-2 items-center'>
-                            <p>{selectedAddress.name}, {selectedAddress.city}, {selectedAddress.state}, {selectedAddress.zip}</p>
+                            <p>{selectedAddress.name}, {formatAddress(selectedAddress)}</p>
                             <SquarePenIcon onClick={() => setSelectedAddress(null)} className='cursor-pointer' size={18} />
                         </div>
                     ) : (
@@ -58,7 +99,7 @@ const OrderSummary = ({ totalPrice, items }) => {
                                         <option value="">Select Address</option>
                                         {
                                             addressList.map((address, index) => (
-                                                <option key={index} value={index}>{address.name}, {address.city}, {address.state}, {address.zip}</option>
+                                                <option key={index} value={index}>{address.name}, {formatAddress(address)}</option>
                                             ))
                                         }
                                     </select>
@@ -73,12 +114,12 @@ const OrderSummary = ({ totalPrice, items }) => {
                 <div className='flex justify-between'>
                     <div className='flex flex-col gap-1 text-slate-400'>
                         <p>Subtotal:</p>
-                        <p>Shipping:</p>
+                        <p>Delivery:</p>
                         {coupon && <p>Coupon:</p>}
                     </div>
                     <div className='flex flex-col gap-1 font-medium text-right'>
                         <p>{currency}{totalPrice.toLocaleString()}</p>
-                        <p>Free</p>
+                        <p>Free Delivery</p>
                         {coupon && <p>{`-${currency}${(coupon.discount / 100 * totalPrice).toFixed(2)}`}</p>}
                     </div>
                 </div>

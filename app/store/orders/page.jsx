@@ -2,22 +2,61 @@
 import { useEffect, useState } from "react"
 import Loading from "@/components/Loading"
 import { orderDummyData } from "@/assets/assets"
+import { useAuth } from "@clerk/nextjs"
+import axios from "axios"
+import { fi } from "date-fns/locale"
+import toast from "react-hot-toast"
 
 export default function StoreOrders() {
+    const {getToken} = useAuth()
+    const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || 'GH₵'
     const [orders, setOrders] = useState([])
     const [loading, setLoading] = useState(true)
     const [selectedOrder, setSelectedOrder] = useState(null)
     const [isModalOpen, setIsModalOpen] = useState(false)
 
+    const getAddressValue = (value) => value || "N/A"
+
 
     const fetchOrders = async () => {
-       setOrders(orderDummyData)
-       setLoading(false)
+        try {
+            const token = await getToken()
+            const {data} = await axios.get('/api/store/orders', {
+                headers:{
+                    Authorization: `Bearer ${token}`
+                }
+            })
+            setOrders(data.orders.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)))
+        } catch (error) {
+            toast.error(error?.response?.data?.error || error.message)
+        } finally {
+            setLoading(false)
+        }
+    //    setOrders(orderDummyData)
+    //    setLoading(false)
     }
 
     const updateOrderStatus = async (orderId, status) => {
         // Logic to update the status of an order
-
+        try {
+            const token = await getToken()
+            await axios.post('/api/store/orders',{orderId, status}, {
+                headers:{
+                    Authorization: `Bearer ${token}`
+                }
+            })
+            setOrders(prevOrders => prevOrders.map(order => {
+                if (order.id === orderId) {
+                    return { ...order, status }
+                }
+                return order
+            }))
+            toast.success('order status updated successfully')
+        } catch (error) {
+            toast.error(error?.response?.data?.error || error.message)
+        } finally {
+            setLoading(false)
+        }
 
     }
 
@@ -63,7 +102,7 @@ export default function StoreOrders() {
                                         {index + 1}
                                     </td>
                                     <td className="px-4 py-3">{order.user?.name}</td>
-                                    <td className="px-4 py-3 font-medium text-slate-800">${order.total}</td>
+                                    <td className="px-4 py-3 font-medium text-slate-800">{currency}{order.total}</td>
                                     <td className="px-4 py-3">{order.paymentMethod}</td>
                                     <td className="px-4 py-3">
                                         {order.isCouponUsed ? (
@@ -82,7 +121,6 @@ export default function StoreOrders() {
                                         >
                                             <option value="ORDER_PLACED">ORDER_PLACED</option>
                                             <option value="PROCESSING">PROCESSING</option>
-                                            <option value="SHIPPED">SHIPPED</option>
                                             <option value="DELIVERED">DELIVERED</option>
                                         </select>
                                     </td>
@@ -107,10 +145,12 @@ export default function StoreOrders() {
                         {/* Customer Details */}
                         <div className="mb-4">
                             <h3 className="font-semibold mb-2">Customer Details</h3>
-                            <p><span className="text-green-700">Name:</span> {selectedOrder.user?.name}</p>
-                            <p><span className="text-green-700">Email:</span> {selectedOrder.user?.email}</p>
-                            <p><span className="text-green-700">Phone:</span> {selectedOrder.address?.phone}</p>
-                            <p><span className="text-green-700">Address:</span> {`${selectedOrder.address?.street}, ${selectedOrder.address?.city}, ${selectedOrder.address?.state}, ${selectedOrder.address?.zip}, ${selectedOrder.address?.country}`}</p>
+                            <p><span className="text-green-700">Name:</span> {getAddressValue(selectedOrder.user?.name)}</p>
+                            <p><span className="text-green-700">Email:</span> {getAddressValue(selectedOrder.user?.email)}</p>
+                            <p><span className="text-green-700">Phone:</span> {getAddressValue(selectedOrder.address?.phone)}</p>
+                            <p><span className="text-green-700">Address:</span> {getAddressValue(selectedOrder.address?.hostel)}</p>
+                            <p><span className="text-green-700">Campus:</span> {getAddressValue(selectedOrder.address?.campus)}</p>
+                            <p><span className="text-green-700">Course ID:</span> {getAddressValue(selectedOrder.address?.course)}</p>
                         </div>
 
                         {/* Products */}
@@ -127,7 +167,7 @@ export default function StoreOrders() {
                                         <div className="flex-1">
                                             <p className="text-slate-800">{item.product?.name}</p>
                                             <p>Qty: {item.quantity}</p>
-                                            <p>Price: ${item.price}</p>
+                                            <p>Price: {currency}{item.price}</p>
                                         </div>
                                     </div>
                                 ))}

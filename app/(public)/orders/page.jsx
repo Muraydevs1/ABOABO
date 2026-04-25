@@ -3,15 +3,49 @@ import PageTitle from "@/components/PageTitle"
 import { useEffect, useState } from "react";
 import OrderItem from "@/components/OrderItem";
 import { orderDummyData } from "@/assets/assets";
+import { useAuth, useUser } from "@clerk/nextjs";
+import axios from "axios";
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
+import Loading from "@/components/Loading";
 
 export default function Orders() {
 
+    const {getToken} = useAuth();
+    const {user, isLoaded} = useUser();
     const [orders, setOrders] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const router = useRouter();
 
     useEffect(() => {
-        setOrders(orderDummyData)
-    }, []);
+        const fetchOrders = async () => {
+            try {
+                // if(!isLoaded) return;
+                // if(!user) return;
+                const token = await getToken();
+                const {data} = await axios.get('/api/orders', {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+                setOrders(data.orders);
+                setLoading(false);
+            } catch (error) {
+                console.log(error)
+                toast.error(error.response?.data?.error || error.message || error.message || "Failed to fetch orders")
+            }
+        }
+        if(isLoaded){
+            fetchOrders();
+        } else {
+            router.push('/')   
+        }
+    }, [isLoaded, user, getToken, router]);
 
+    if(!loading || isLoaded){
+        return <Loading/>
+    }
+    
     return (
         <div className="min-h-[70vh] mx-6">
             {orders.length > 0 ? (

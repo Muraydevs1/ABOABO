@@ -22,29 +22,31 @@ export async function POST(request) {
         const description = formData.get('description')
         const mrp = Number(formData.get('mrp'))
         const price = Number(formData.get('price'))
-        const images = formData.getAll('images')
+        const images = formData.getAll('images').filter((image) => image instanceof File && image.size > 0)
         const category = formData.get('category')
 
-        if(!name || !description || !mrp || !price || images.length < 1 || !category){
-            return NextResponse.json({error: 'not authorized'}, {status:401})
+        if(!name || !description || Number.isNaN(mrp) || Number.isNaN(price) || images.length < 1 || !category){
+            return NextResponse.json({error: 'Missing product info or image file'}, {status:400})
         }
 
         // Uploading Images to Imagekit
-        const imagesUrl = await Promise.all(images.map(async(image) => {
+            const imagesUrl = await Promise.all(images.map(async(image, index) => {
             const buffer = Buffer.from(await image.arrayBuffer());
-            const response = await imagekit.upload({
-                file: buffer,
-                fileName: image.name,
+            const base64File = buffer.toString('base64');
+            const response = await imagekit.files.upload({
+                file: base64File,
+                fileName: image.name || `${name}-${index + 1}`,
                 folder: "products",
             })
-            const url = imagekit.url({
-                path: response.filePath,
+            const url = imagekit.helper.buildSrc({
+                urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT,
+                src: response.filePath,
                 transformation:[
                     {quality: 'auto'},
                     {format: 'webp'},
                     {width: '1024'}
                 ]
-            })
+            }) || response.url
             return url
         }))
 

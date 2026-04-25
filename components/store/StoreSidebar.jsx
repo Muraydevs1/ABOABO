@@ -4,6 +4,7 @@ import { HomeIcon, LayoutListIcon, SquarePenIcon, SquarePlusIcon } from "lucide-
 import Image from "next/image"
 import Link from "next/link"
 
+
 const StoreSidebar = ({storeInfo}) => {
 
     const pathname = usePathname()
