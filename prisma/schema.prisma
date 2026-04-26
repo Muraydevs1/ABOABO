@@ -147,6 +147,7 @@ model Store {
     description String
     username    String   @unique
     address     String
+    campus      String?
     status      String   @default("pending")
     isActive    Boolean  @default(false)
     logo        String

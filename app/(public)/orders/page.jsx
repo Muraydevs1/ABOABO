@@ -2,7 +2,6 @@
 import PageTitle from "@/components/PageTitle"
 import { useEffect, useState } from "react";
 import OrderItem from "@/components/OrderItem";
-import { orderDummyData } from "@/assets/assets";
 import { useAuth, useUser } from "@clerk/nextjs";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -20,8 +19,6 @@ export default function Orders() {
     useEffect(() => {
         const fetchOrders = async () => {
             try {
-                // if(!isLoaded) return;
-                // if(!user) return;
                 const token = await getToken();
                 const {data} = await axios.get('/api/orders', {
                     headers: {
@@ -29,20 +26,26 @@ export default function Orders() {
                     }
                 });
                 setOrders(data.orders);
-                setLoading(false);
             } catch (error) {
                 console.log(error)
                 toast.error(error.response?.data?.error || error.message || error.message || "Failed to fetch orders")
+            } finally {
+                setLoading(false);
             }
         }
-        if(isLoaded){
-            fetchOrders();
-        } else {
-            router.push('/')   
+
+        if(!isLoaded) return;
+
+        if(!user){
+            setLoading(false);
+            router.push('/');
+            return;
         }
+
+        fetchOrders();
     }, [isLoaded, user, getToken, router]);
 
-    if(!loading || isLoaded){
+    if(loading || !isLoaded){
         return <Loading/>
     }
     

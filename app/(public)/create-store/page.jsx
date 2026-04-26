@@ -9,6 +9,7 @@ import { useAuth, useUser } from "@clerk/nextjs"
 import axios from "axios"
 
 export default function CreateStore() {
+    const campusOptions = ["Nyankpala", "Dungu", "City"]
     const {user} =useUser();
     const router = useRouter()
     const {getToken} = useAuth()
@@ -24,6 +25,7 @@ export default function CreateStore() {
         email: "",
         contact: "",
         address: "",
+        campus: "",
         image: "",
         course: ""
     })
@@ -83,6 +85,7 @@ export default function CreateStore() {
             formData.append("username", storeInfo.username)
             formData.append("email", storeInfo.email)
             formData.append("address", storeInfo.address)
+            formData.append("campus", storeInfo.campus)
             formData.append("contact", storeInfo.contact)
             formData.append("image", storeInfo.image)
             formData.append("course", storeInfo.course)
@@ -145,6 +148,14 @@ export default function CreateStore() {
 
                         <p>Contact Number</p>
                         <input name="contact" onChange={onChangeHandler} value={storeInfo.contact} type="text" placeholder="Enter your contact number" className="border border-slate-300 outline-slate-400 w-full max-w-lg p-2 rounded" />
+
+                        <p>Campus</p>
+                        <select name="campus" onChange={onChangeHandler} value={storeInfo.campus} className="border border-slate-300 outline-slate-400 w-full max-w-lg p-2 rounded bg-white" required>
+                            <option value="" disabled>Select campus</option>
+                            {campusOptions.map((campus) => (
+                                <option key={campus} value={campus}>{campus}</option>
+                            ))}
+                        </select>
 
                         <p>Address</p>
                         <textarea name="address" onChange={onChangeHandler} value={storeInfo.address} rows={5} placeholder="Enter your address/Location" className="border border-slate-300 outline-slate-400 w-full max-w-lg p-2 rounded resize-none" />

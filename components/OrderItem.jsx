@@ -12,10 +12,12 @@ const OrderItem = ({ order }) => {
     const [ratingModal, setRatingModal] = useState(null);
 
     const { ratings } = useSelector(state => state.rating);
-    const formatAddress = (address) => {
-        if (!address) return "No address provided";
-        return [address.hostel, address.campus, address.course].filter(Boolean).join(", ");
-    };
+    const address = order.address || {};
+    const name = address.name || "N/A";
+    const hostel = address.hostel || "N/A";
+    const campus = address.campus || "N/A";
+    const course = address.course || "N/A";
+    const phone = address.phone || "N/A";
 
     return (
         <>
@@ -52,9 +54,13 @@ const OrderItem = ({ order }) => {
                 <td className="text-center max-md:hidden">{currency}{order.total}</td>
 
                 <td className="text-left max-md:hidden">
-                    <p>{order.address.name}</p>
-                    <p>{formatAddress(order.address)}</p>
-                    <p>{order.address.phone}</p>
+                    <div className="space-y-0.5">
+                        <p><span className="text-slate-500">Name:</span> {name}</p>
+                        <p><span className="text-slate-500">Address:</span> {hostel}</p>
+                        <p><span className="text-slate-500">Campus:</span> {campus}</p>
+                        <p><span className="text-slate-500">Course ID:</span> {course}</p>
+                        <p><span className="text-slate-500">Phone:</span> {phone}</p>
+                    </div>
                 </td>
 
                 <td className="text-left space-y-2 text-sm max-md:hidden">
@@ -74,9 +80,11 @@ const OrderItem = ({ order }) => {
             {/* Mobile */}
             <tr className="md:hidden">
                 <td colSpan={5}>
-                    <p>{order.address.name}</p>
-                    <p>{formatAddress(order.address)}</p>
-                    <p>{order.address.phone}</p>
+                    <p><span className="text-slate-500">Name:</span> {name}</p>
+                    <p><span className="text-slate-500">Address:</span> {hostel}</p>
+                    <p><span className="text-slate-500">Campus:</span> {campus}</p>
+                    <p><span className="text-slate-500">Course ID:</span> {course}</p>
+                    <p><span className="text-slate-500">Phone:</span> {phone}</p>
                     <br />
                     <div className="flex items-center">
                         <span className='text-center mx-auto px-6 py-1.5 rounded bg-green-100 text-green-700' >

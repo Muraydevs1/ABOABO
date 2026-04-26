@@ -4,6 +4,8 @@ import { validateCourseId } from '@/lib/utils/courseId';
 import {getAuth} from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 
+const ALLOWED_CAMPUSES = ["Nyankpala", "Dungu", "City"];
+
 // create store
 
 export async function POST (request){
@@ -19,13 +21,18 @@ export async function POST (request){
         const email = formData.get('email')
         const contact = formData.get('contact')
         const address = formData.get('address')
+        const campus = formData.get('campus')?.trim()
         const courseRaw = formData.get('course')
         const image = formData.get('image')
 
         const { isValid, courseId: course, error: courseIdError } = validateCourseId(courseRaw || "")
 
-        if (!name || !userName || !description || !email || !contact || !address || !image || !courseRaw){
+        if (!name || !userName || !description || !email || !contact || !address || !campus || !image || !courseRaw){
             return NextResponse.json({error:"Missing Store Info"}, {status:400})
+        }
+
+        if (!ALLOWED_CAMPUSES.includes(campus)) {
+            return NextResponse.json({error: "Invalid campus selected"}, {status:400})
         }
 
         if (!isValid){
@@ -91,6 +98,7 @@ export async function POST (request){
                 email,
                 contact,
                 address,
+                campus,
                 courseId: course,
                 description,
                 logo: optimizedImage
