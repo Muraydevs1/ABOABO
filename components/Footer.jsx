@@ -9,8 +9,8 @@ const Footer = () => {
         {
             title: "CONTACT",
             links: [
-                { text: "+233-050-594-7459", path: '/', icon: MailIcon },
-                { text: "amuricharlesrameom@gmail.com", path: '/', icon: PhoneIcon },
+                { text: "amuricharlesrameom@gmail.com", path: '/', icon: MailIcon },
+                { text: "+233-050-594-7459", path: '/', icon: PhoneIcon },
                 { text: "NYANPKALA, UDS", path: '/', icon: MapPinIcon }
             ]
         }
