@@ -1,17 +1,18 @@
 'use client'
-import { useEffect, useState } from "react"
+import { use, useEffect, useState } from "react"
 import Loading from "../Loading"
 import Link from "next/link"
 import { ArrowRightIcon } from "lucide-react"
 import SellerNavbar from "./StoreNavbar"
 import SellerSidebar from "./StoreSidebar"
-import axios from "axios"
+import { dummyStoreData } from "@/assets/assets"
 import { useAuth } from "@clerk/nextjs"
+import axios from "axios"
+import { fi } from "date-fns/locale"
 
 const StoreLayout = ({ children }) => {
+    const {getToken} = useAuth()
 
-
-    const { getToken } = useAuth()
     const [isSeller, setIsSeller] = useState(false)
     const [loading, setLoading] = useState(true)
     const [storeInfo, setStoreInfo] = useState(null)
@@ -19,17 +20,14 @@ const StoreLayout = ({ children }) => {
     const fetchIsSeller = async () => {
         try {
             const token = await getToken()
-            const { data } = await axios.get('/api/store/is-seller', {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
+            const {data} = await axios.get('/api/store/is-seller', {
+                headers:{Authorization:`Bearer ${token}`}
             })
-
-            setIsSeller(Boolean(data?.isSeller))
-            setStoreInfo(data?.storeInfo || null)
+            setIsSeller(data.isSeller)
+            setStoreInfo(data.storeInfo)
+            // setLoading(false)
         } catch (error) {
-            setIsSeller(false)
-            setStoreInfo(null)
+            console.error("Error fetching seller status:", error)
         } finally {
             setLoading(false)
         }
