@@ -2,7 +2,6 @@
 import { assets } from "@/assets/assets"
 import { useAuth } from "@clerk/nextjs"
 import axios from "axios"
-import { err } from "inngest/types"
 import Image from "next/image"
 import { useState } from "react"
 import { toast } from "react-hot-toast"
@@ -29,7 +28,7 @@ export default function StoreAddProduct() {
         setProductInfo({ ...productInfo, [e.target.name]: e.target.value })
     }
 
-    const handleUseAI = async (key, file) => {
+    const handleUseAI = async (file, key) => {
         setImages(prev=>({...prev, [key]:file}))
 
         if(key === "1" && file && !aiUsed){
@@ -119,7 +118,13 @@ export default function StoreAddProduct() {
             <div htmlFor="" className="flex gap-3 mt-4">
                 {Object.keys(images).map((key) => (
                     <label key={key} htmlFor={`images${key}`}>
-                        <Image width={300} height={300} className='h-15 w-auto border border-slate-200 rounded cursor-pointer' src={images[key] ? URL.createObjectURL(images[key]) : assets.upload_area} alt="" />
+                        <Image
+                            width={300}
+                            height={300}
+                            className='h-15 w-auto border border-slate-200 rounded cursor-pointer'
+                            src={images[key] instanceof File ? URL.createObjectURL(images[key]) : assets.upload_area}
+                            alt=""
+                        />
                         <input type="file" accept='image/*' id={`images${key}`} onChange={e => handleUseAI(e.target.files[0], key)} hidden />
                     </label>
                 ))}
