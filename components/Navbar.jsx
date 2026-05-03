@@ -1,25 +1,48 @@
 'use client'
-import { PackageIcon, Search, ShoppingCart, ShoppingCartIcon } from "lucide-react";
+import { PackageIcon, Search, ShoppingCart, ShoppingCartIcon, StoreIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { useUser, useClerk, UserButton } from "@clerk/nextjs";
+import { useUser, useClerk, UserButton, useAuth } from "@clerk/nextjs";
+import axios from "axios";
 
 const Navbar = () => {
 
     const {user} = useUser();
     const {openSignIn} = useClerk();
+    const {getToken} = useAuth();
 
     const router = useRouter();
 
     const [search, setSearch] = useState('')
+    const [isSeller, setIsSeller] = useState(false)
     const cartCount = useSelector(state => state.cart.total)
 
     const handleSearch = (e) => {
         e.preventDefault()
         router.push(`/shop?search=${search}`)
     }
+
+    useEffect(() => {
+        const fetchIsSeller = async () => {
+            if (!user) {
+                setIsSeller(false)
+                return
+            }
+            try {
+                const token = await getToken()
+                const { data } = await axios.get('/api/store/is-seller', {
+                    headers: { Authorization: `Bearer ${token}` }
+                })
+                setIsSeller(Boolean(data?.isSeller))
+            } catch {
+                setIsSeller(false)
+            }
+        }
+
+        fetchIsSeller()
+    }, [getToken, user])
 
     return (
         <nav className="relative bg-white">
@@ -56,6 +79,9 @@ const Navbar = () => {
                         </button>):(
                             <UserButton>
                                 <UserButton.MenuItems>
+                                    {isSeller && (
+                                        <UserButton.Action labelIcon={<StoreIcon size={16} />} label="My Store" onClick={() => router.push('/store')} />
+                                    )}
                                     <UserButton.Action labelIcon={<PackageIcon size={16}/>} label="My Orders" onClick={()=>router.push('/orders')}/>
                                 </UserButton.MenuItems>
                             </UserButton>
@@ -68,13 +94,16 @@ const Navbar = () => {
                     { user? (<div className="sm:hidden">
                         <UserButton>
                             <UserButton.MenuItems>
+                                {isSeller && (
+                                    <UserButton.Action labelIcon={<StoreIcon size={16} />} label="My Store" onClick={() => router.push('/store')} />
+                                )}
                                 <UserButton.Action labelIcon={<ShoppingCartIcon size={16}/>} label="Cart" onClick={()=>router.push('/cart')}/>
                                 <UserButton.Action labelIcon={<PackageIcon size={16}/>} label="My Orders" onClick={()=>router.push('/orders')}/>
                             </UserButton.MenuItems>
                         </UserButton>
                     </div>):(
                     <div className="sm:hidden">
-                        <button className="px-7 py-1.5 bg-indigo-500 hover:bg-indigo-600 text-sm transition text-white rounded-full" onClick={openSignIn}>
+                        <button className="px-7 py-1.5 bg-green-500 hover:bg-green-600 text-sm transition text-white rounded-full" onClick={openSignIn}>
                             Login
                         </button>
                     </div>

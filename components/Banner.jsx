@@ -1,30 +1,57 @@
 'use client'
 import React from 'react'
 import { useRouter } from 'next/navigation'
+import { useAuth, useUser } from '@clerk/nextjs'
+import axios from 'axios'
 
 export default function Banner() {
   const [isOpen, setIsOpen] = React.useState(true);
+  const [isSeller, setIsSeller] = React.useState(false);
   const router = useRouter();
+  const { user } = useUser();
+  const { getToken } = useAuth();
 
-  const handleCreateStore = () => {
+  const handleStoreAction = () => {
     setIsOpen(false);
-    router.push('/create-store');
+    router.push(isSeller ? '/store' : '/create-store');
   };
+
+  React.useEffect(() => {
+    const fetchIsSeller = async () => {
+      if (!user) {
+        setIsSeller(false);
+        return;
+      }
+      try {
+        const token = await getToken();
+        const { data } = await axios.get('/api/store/is-seller', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setIsSeller(Boolean(data?.isSeller));
+      } catch {
+        setIsSeller(false);
+      }
+    };
+
+    fetchIsSeller();
+  }, [getToken, user]);
 
   return isOpen && (
     <div className="w-full px-4 sm:px-6 py-2 font-medium text-sm text-white bg-gradient-to-r from-green-600 via-green-500 to-green-400">
       <div className='flex items-center justify-between gap-3 max-w-7xl mx-auto'>
         <p className="text-left sm:text-center text-xs sm:text-sm">
-          Start selling on ABOABO today. Open your store in minutes.
+          {isSeller
+            ? 'Your store is live. Manage products, orders, and updates in one place.'
+            : 'Start selling on ABOABO today. Open your store in minutes.'}
         </p>
         
         <div className="flex items-center space-x-3 sm:space-x-6 shrink-0">
           <button
-            onClick={handleCreateStore}
+            onClick={handleStoreAction}
             type="button"
             className="font-normal text-green-700 bg-white px-4 sm:px-7 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm"
           >
-            Create Store
+            {isSeller ? 'Go to My Store' : 'Create Store'}
           </button>
 
           <button
