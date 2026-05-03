@@ -9,13 +9,10 @@ import toast from "react-hot-toast"
 
 export default function StoreOrders() {
     const {getToken} = useAuth()
-    const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || 'GH₵'
     const [orders, setOrders] = useState([])
     const [loading, setLoading] = useState(true)
     const [selectedOrder, setSelectedOrder] = useState(null)
     const [isModalOpen, setIsModalOpen] = useState(false)
-
-    const getAddressValue = (value) => value || "N/A"
 
 
     const fetchOrders = async () => {
@@ -102,7 +99,7 @@ export default function StoreOrders() {
                                         {index + 1}
                                     </td>
                                     <td className="px-4 py-3">{order.user?.name}</td>
-                                    <td className="px-4 py-3 font-medium text-slate-800">{currency}{order.total}</td>
+                                    <td className="px-4 py-3 font-medium text-slate-800">${order.total}</td>
                                     <td className="px-4 py-3">{order.paymentMethod}</td>
                                     <td className="px-4 py-3">
                                         {order.isCouponUsed ? (
@@ -119,8 +116,9 @@ export default function StoreOrders() {
                                             onChange={e => updateOrderStatus(order.id, e.target.value)}
                                             className="border-gray-300 rounded-md text-sm focus:ring focus:ring-blue-200"
                                         >
-                                            <option value="ORDER_PLACED">ORDER_PLACED</option>
+                                            <option value="ORDER_PLACED">ORDER PLACED</option>
                                             <option value="PROCESSING">PROCESSING</option>
+                                            <option value="SHIPPED">SHIPPED</option>
                                             <option value="DELIVERED">DELIVERED</option>
                                         </select>
                                     </td>
@@ -145,12 +143,10 @@ export default function StoreOrders() {
                         {/* Customer Details */}
                         <div className="mb-4">
                             <h3 className="font-semibold mb-2">Customer Details</h3>
-                            <p><span className="text-green-700">Name:</span> {getAddressValue(selectedOrder.user?.name)}</p>
-                            <p><span className="text-green-700">Email:</span> {getAddressValue(selectedOrder.user?.email)}</p>
-                            <p><span className="text-green-700">Phone:</span> {getAddressValue(selectedOrder.address?.phone)}</p>
-                            <p><span className="text-green-700">Address:</span> {getAddressValue(selectedOrder.address?.hostel)}</p>
-                            <p><span className="text-green-700">Campus:</span> {getAddressValue(selectedOrder.address?.campus)}</p>
-                            <p><span className="text-green-700">Course ID:</span> {getAddressValue(selectedOrder.address?.course)}</p>
+                            <p><span className="text-green-700">Name:</span> {selectedOrder.user?.name}</p>
+                            <p><span className="text-green-700">Email:</span> {selectedOrder.user?.email}</p>
+                            <p><span className="text-green-700">Phone:</span> {selectedOrder.address?.phone}</p>
+                            <p><span className="text-green-700">Address:</span> {`${selectedOrder.address?.street}, ${selectedOrder.address?.city}, ${selectedOrder.address?.state}, ${selectedOrder.address?.zip}, ${selectedOrder.address?.country}`}</p>
                         </div>
 
                         {/* Products */}
@@ -167,7 +163,7 @@ export default function StoreOrders() {
                                         <div className="flex-1">
                                             <p className="text-slate-800">{item.product?.name}</p>
                                             <p>Qty: {item.quantity}</p>
-                                            <p>Price: {currency}{item.price}</p>
+                                            <p>Price: ${item.price}</p>
                                         </div>
                                     </div>
                                 ))}
