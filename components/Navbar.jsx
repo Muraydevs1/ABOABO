@@ -74,7 +74,7 @@ const Navbar = () => {
                             <button className="absolute -top-1 left-3 text-[8px] text-white bg-slate-600 size-3.5 rounded-full">{cartCount}</button>
                         </Link>
                         { !user? (
-                        <button className="px-8 py-2 bg-indigo-500 hover:bg-indigo-600 transition text-white rounded-full" onClick={openSignIn}>
+                        <button className="px-8 py-2 bg-green-500 hover:bg-green-600 transition text-white rounded-full" onClick={openSignIn}>
                             Login
                         </button>):(
                             <UserButton>

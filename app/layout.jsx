@@ -9,6 +9,9 @@ const outfit = Outfit({ subsets: ["latin"], weight: ["400", "500", "600"] });
 export const metadata = {
     title: "ABOABO - Student Marketplace",
     description: "ABOABO is a marketplace for UDS students to buy and sell products on campus.",
+    icons: {
+        icon: "/favicon.png",
+    },
 };
 
 export default function RootLayout({ children }) {

@@ -301,7 +301,8 @@ flowchart LR
     Seller[Seller]
     Admin[Admin]
 
-    ABOABO[ABOABO Web App\nNext.js + API Routes]
+    ABOABO[ABOABO
+    User Interface + API Routes]
 
     Clerk[Clerk Auth]
     DB[(PostgreSQL via Prisma)]

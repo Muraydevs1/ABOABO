@@ -20,12 +20,14 @@ import { ClockFadingIcon, HeadsetIcon, SendIcon } from "lucide-react";
 import profile_pic1 from "./profile_pic1.jpg"
 import profile_pic2 from "./profile_pic2.jpg"
 import profile_pic3 from "./profile_pic3.jpg"
+import aboabo_logo from "./aboabologo.png"
 
 export const assets = {
     upload_area, hero_model_img,
     hero_product_img1, hero_product_img2, gs_logo,
     product_img1, product_img2, product_img3, product_img4, product_img5, product_img6,
     product_img7, product_img8, product_img9, product_img10, product_img11, product_img12,
+    aboabo_logo
 }
 
 export const categories = ["Headphones", "Speakers", "Watch", "Earbuds", "Mouse", "Decoration"];
@@ -245,9 +247,9 @@ export const productDummyData = [
 ];
 
 export const ourSpecsData = [
-    { title: "Free Shipping", description: "Enjoy fast, free delivery on every order no conditions, just reliable doorstep.", icon: SendIcon, accent: '#05DF72' },
-    { title: "7 Days easy Return", description: "Change your mind? No worries. Return any item within 7 days.", icon: ClockFadingIcon, accent: '#FF8904' },
-    { title: "24/7 Customer Support", description: "We're here for you. Get expert help with our customer support.", icon: HeadsetIcon, accent: '#A684FF' }
+    { title: "Free Delivery on Campus", description: "Enjoy fast, discounted to free delivery on every order no conditions, just reliable to your Hostel.", icon: SendIcon, accent: '#05DF72' },
+    { title: "Flexible Return Policy", description: "Change your mind? No worries. Return any item within a couple of days.", icon: ClockFadingIcon, accent: '#FF8904' },
+    { title: "24/7 Customer Support", description: "We're here for you. Get help on delayed orders with our customer support.", icon: HeadsetIcon, accent: '#A684FF' }
 ]
 
 export const addressDummyData = {
