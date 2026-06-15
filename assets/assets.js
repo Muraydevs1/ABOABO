@@ -1,4 +1,3 @@
-import gs_logo from "./gs_logo.jpg"
 import happy_store from "./happy_store.webp"
 import upload_area from "./upload_area.svg"
 import hero_model_img from "./hero_model_img.png"
@@ -24,7 +23,7 @@ import aboabo_logo from "./aboabologo.png"
 
 export const assets = {
     upload_area, hero_model_img,
-    hero_product_img1, hero_product_img2, gs_logo,
+    hero_product_img1, hero_product_img2, 
     product_img1, product_img2, product_img3, product_img4, product_img5, product_img6,
     product_img7, product_img8, product_img9, product_img10, product_img11, product_img12,
     aboabo_logo
@@ -59,7 +58,7 @@ export const dummyStoreData = {
         id: "user_31dOriXqC4TATvc0brIhlYbwwc5",
         name: "Great Stack",
         email: "user.greatstack@gmail.com",
-        image: gs_logo,
+        
     }
 }
 
@@ -278,7 +277,7 @@ export const dummyUserData = {
     id: "user_31dQbH27HVtovbs13X2cmqefddM",
     name: "GreatStack",
     email: "greatstack@example.com",
-    image: gs_logo,
+    image: profile_pic1,
     cart: {}
 }
 
@@ -336,7 +335,7 @@ export const storesDummyData = [
         address: "123 Maplewood Drive Springfield, IL 62704 USA",
         status: "approved",
         isActive: true,
-        logo: gs_logo,
+        logo: aboabo_logo,
         email: "greatstack@example.com",
         contact: "+0 1234567890",
         createdAt: "2025-08-22T08:22:16.189Z",
