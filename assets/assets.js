@@ -247,8 +247,8 @@ export const productDummyData = [
 
 export const ourSpecsData = [
     { title: "Free Delivery on Campus", description: "Enjoy fast, discounted to free delivery on every order no conditions, just reliable to your Hostel.", icon: SendIcon, accent: '#05DF72' },
-    { title: "Flexible Return Policy", description: "Change your mind? No worries. Return any item within a couple of days.", icon: ClockFadingIcon, accent: '#FF8904' },
-    { title: "24/7 Customer Support", description: "We're here for you. Get help on delayed orders with our customer support.", icon: HeadsetIcon, accent: '#A684FF' }
+    { title: "Flexible Store Return Policies", description: "Change your mind? No worries. Return any item within a couple of days.", icon: ClockFadingIcon, accent: '#05DF72' },
+    { title: "24/7 Customer Support", description: "We're here for you. Get help on delayed orders with our customer support.", icon: HeadsetIcon, accent: '#05DF72' }
 ]
 
 export const addressDummyData = {
