@@ -20,3 +20,61 @@
 .no-scrollbar::-webkit-scrollbar {
     display: none;
 }
+
+/* Mobile readability: ABeeZee sets dense at small sizes, so open up
+   tracking (inherited everywhere) and default line-height on phones. */
+@media (max-width: 40rem) {
+    body {
+        letter-spacing: 0.01em;
+        line-height: 1.6;
+    }
+}
+
+/* Aldrich for all prices/monetary values — use the `font-price` utility.
+   --font-aldrich is set on <body> by next/font in app/layout.jsx. */
+@theme inline {
+    --font-price: var(--font-aldrich);
+}
+
+/* --- shadcn/ui theme tokens (added for product-card-01 evaluation) ---
+   Purely additive: defines new CSS variables and Tailwind color utilities
+   (bg-card, bg-primary, etc.) used only by components/ui/*. No existing
+   styles are overridden. Safe to delete this whole block to revert. */
+:root {
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.145 0 0);
+    --primary: oklch(0.205 0 0);
+    --primary-foreground: oklch(0.985 0 0);
+    --secondary: oklch(0.97 0 0);
+    --secondary-foreground: oklch(0.205 0 0);
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.556 0 0);
+    --accent: oklch(0.97 0 0);
+    --accent-foreground: oklch(0.205 0 0);
+    --destructive: oklch(0.577 0.245 27.325);
+    --border: oklch(0.922 0 0);
+    --input: oklch(0.922 0 0);
+    --ring: oklch(0.708 0 0);
+}
+
+@theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+}
+/* --- end shadcn/ui theme tokens --- */

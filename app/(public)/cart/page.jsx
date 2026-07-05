@@ -55,7 +55,8 @@ export default function Cart() {
 
                 <div className="flex items-start justify-between gap-5 max-lg:flex-col">
 
-                    <table className="w-full max-w-4xl text-slate-600 table-auto">
+                    <div className="w-full max-w-4xl overflow-x-auto">
+                    <table className="w-full text-slate-600 table-auto">
                         <thead>
                             <tr className="max-sm:text-sm">
                                 <th className="text-left">Product</th>
@@ -75,13 +76,16 @@ export default function Cart() {
                                             <div>
                                                 <p className="max-sm:text-sm">{item.name}</p>
                                                 <p className="text-xs text-slate-500">{item.category}</p>
-                                                <p>{currency}{item.price}</p>
+                                                <p className="font-price">{currency}{item.price}</p>
+                                                <button onClick={() => handleDeleteItemFromCart(item.id)} className="md:hidden mt-1 flex items-center gap-1.5 text-xs text-red-500 hover:bg-red-50 -ml-1 p-1.5 pr-2 rounded active:scale-95 transition-all">
+                                                    <Trash2Icon size={16} /> Remove
+                                                </button>
                                             </div>
                                         </td>
                                         <td className="text-center">
                                             <Counter productId={item.id} />
                                         </td>
-                                        <td className="text-center">{currency}{(item.price * item.quantity).toLocaleString()}</td>
+                                        <td className="text-center font-price">{currency}{(item.price * item.quantity).toLocaleString()}</td>
                                         <td className="text-center max-md:hidden">
                                             <button onClick={() => handleDeleteItemFromCart(item.id)} className=" text-red-500 hover:bg-red-50 p-2.5 rounded-full active:scale-95 transition-all">
                                                 <Trash2Icon size={18} />
@@ -92,6 +96,7 @@ export default function Cart() {
                             }
                         </tbody>
                     </table>
+                    </div>
                     <OrderSummary totalPrice={totalPrice} items={cartArray} />
                 </div>
             </div>

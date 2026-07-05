@@ -48,27 +48,27 @@ export default function StoreShop() {
                     <Image
                         src={storeInfo.logo}
                         alt={storeInfo.name}
-                        className="size-32 sm:size-38 object-cover border-2 border-slate-100 rounded-md"
+                        className="size-32 sm:size-38 shrink-0 object-cover border-2 border-slate-100 rounded-md"
                         width={200}
                         height={200}
                     />
-                    <div className="text-center md:text-left">
+                    <div className="text-center md:text-left w-full min-w-0">
                         <h1 className="text-3xl font-semibold text-slate-800">{storeInfo.name}</h1>
                         <p className="text-sm text-slate-600 mt-2 max-w-lg">{storeInfo.description}</p>
                         <div className="text-xs text-slate-500 mt-4 space-y-1"></div>
                         <div className="space-y-2 text-sm text-slate-500">
-                            <div className="flex items-center">
-                                <MapPinIcon className="w-4 h-4 text-gray-500 mr-2" />
-                                <span>{storeInfo.address}</span>
+                            <div className="flex items-center justify-center md:justify-start">
+                                <MapPinIcon className="w-4 h-4 text-gray-500 mr-2 shrink-0" />
+                                <span className="min-w-0 break-words">{storeInfo.address}</span>
                             </div>
-                            <div className="flex items-center">
-                                <MailIcon className="w-4 h-4 text-gray-500 mr-2" />
-                                <span>{storeInfo.email}</span>
+                            <div className="flex items-center justify-center md:justify-start">
+                                <MailIcon className="w-4 h-4 text-gray-500 mr-2 shrink-0" />
+                                <span className="min-w-0 break-all">{storeInfo.email}</span>
                             </div>
                             {rawContact && (
-                                <div className="flex items-center">
-                                    <PhoneIcon className="w-4 h-4 text-gray-500 mr-2" />
-                                    <span>{rawContact}</span>
+                                <div className="flex items-center justify-center md:justify-start">
+                                    <PhoneIcon className="w-4 h-4 text-gray-500 mr-2 shrink-0" />
+                                    <span className="min-w-0 break-words">{rawContact}</span>
                                 </div>
                             )}
                         </div>

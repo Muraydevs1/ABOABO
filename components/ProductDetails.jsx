@@ -30,15 +30,15 @@ const ProductDetails = ({ product }) => {
     
     return (
         <div className="flex max-lg:flex-col gap-12">
-            <div className="flex max-sm:flex-col-reverse gap-3">
-                <div className="flex sm:flex-col gap-3">
+            <div className="flex max-sm:flex-col-reverse gap-3 max-w-full min-w-0">
+                <div className="flex sm:flex-col gap-3 max-sm:overflow-x-auto max-sm:w-full no-scrollbar">
                     {product.images.map((image, index) => (
-                        <div key={index} onClick={() => setMainImage(product.images[index])} className="bg-slate-100 flex items-center justify-center size-26 rounded-lg group cursor-pointer">
+                        <div key={index} onClick={() => setMainImage(product.images[index])} className="bg-slate-100 flex items-center justify-center size-26 shrink-0 rounded-lg group cursor-pointer">
                             <Image src={image} className="group-hover:scale-103 group-active:scale-95 transition" alt="" width={45} height={45} />
                         </div>
                     ))}
                 </div>
-                <div className="flex justify-center items-center h-100 sm:size-113 bg-slate-100 rounded-lg ">
+                <div className="flex justify-center items-center h-100 sm:size-113 max-w-full bg-slate-100 rounded-lg ">
                     <Image src={mainImage} alt="" width={250} height={250} />
                 </div>
             </div>
@@ -51,8 +51,8 @@ const ProductDetails = ({ product }) => {
                     <p className="text-sm ml-3 text-slate-500">{product.rating.length} Reviews</p>
                 </div>
                 <div className="flex items-start my-6 gap-3 text-2xl font-semibold text-slate-800">
-                    <p> {currency}{product.price} </p>
-                    <p className="text-xl text-slate-500 line-through">{currency}{product.mrp}</p>
+                    <p className="font-price"> {currency}{product.price} </p>
+                    <p className="text-xl text-slate-500 line-through font-price">{currency}{product.mrp}</p>
                 </div>
                 <div className="flex items-center gap-2 text-slate-500">
                     <TagIcon size={14} />
