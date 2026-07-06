@@ -64,17 +64,31 @@ export async function POST(request) {
         }
     
     // GROUP ORDERS BY STORE USING MAP
+        const MAX_QUANTITY_PER_ITEM = 100
         const ordersbyStore = new Map()
         for(const item of items){
+            // Validate quantity: integer, > 0, within a sane maximum
+            const quantity = Number(item.quantity)
+            if (!Number.isInteger(quantity) || quantity <= 0 || quantity > MAX_QUANTITY_PER_ITEM) {
+                return new Response(JSON.stringify({ error: "invalid item quantity" }), { status: 400 })
+            }
+
             const product = await prisma.product.findUnique({where: {id: item.id}})
             if (!product) {
                 return new Response(JSON.stringify({ error: "product not found" }), { status: 404 });
             }
+
+            // Reject out-of-stock products before creating any order or initializing payment
+            if (!product.inStock) {
+                return new Response(JSON.stringify({ error: "product is out of stock" }), { status: 400 });
+            }
+
             const storeId = product.storeId
             if(!ordersbyStore.has(storeId)){
                 ordersbyStore.set(storeId, [])
             }
-            ordersbyStore.get(storeId).push({...item, price: product.price})
+            // Use the validated numeric quantity and the trusted server-side price
+            ordersbyStore.get(storeId).push({...item, quantity, price: product.price})
         }
         let ordersId = [];
         let fullAmount = 0;

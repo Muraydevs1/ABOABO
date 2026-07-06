@@ -81,8 +81,8 @@ export default function StoreManageProducts() {
                                 </div>
                             </td>
                             <td className="px-4 py-3 max-w-md text-slate-600 hidden md:table-cell truncate">{product.description}</td>
-                            <td className="px-4 py-3 hidden md:table-cell font-price">{currency} {product.mrp.toLocaleString()}</td>
-                            <td className="px-4 py-3 font-price">{currency} {product.price.toLocaleString()}</td>
+                            <td className="px-4 py-3 hidden md:table-cell font-price">{currency}{product.mrp.toLocaleString()}</td>
+                            <td className="px-4 py-3 font-price">{currency}{product.price.toLocaleString()}</td>
                             <td className="px-4 py-3 text-center">
                                 <label className="relative inline-flex items-center cursor-pointer text-gray-900 gap-3">
                                     <input type="checkbox" className="sr-only peer" onChange={() => toast.promise(toggleStock(product.id), { loading: "Updating data..." })} checked={product.inStock} />

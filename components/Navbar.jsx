@@ -50,7 +50,7 @@ const Navbar = () => {
             <div className="mx-6">
                 <div className="flex items-center justify-between max-w-7xl mx-auto py-4  transition-all">
 
-                    <Logo className="relative text-2xl min-[400px]:text-3xl sm:text-4xl gap-1.5 sm:gap-2 mr-4" dotClassName="text-3xl min-[400px]:text-4xl sm:text-5xl" badge="UDS" floatingBadge />
+                    <Logo className="text-2xl min-[400px]:text-3xl sm:text-4xl gap-1.5 sm:gap-2 mr-4" dotClassName="text-3xl min-[400px]:text-4xl sm:text-5xl" badge="UDS" floatingBadge />
 
                     {/* Desktop Menu */}
                     <div className="hidden sm:flex items-center gap-4 lg:gap-8 text-slate-600">

@@ -21,19 +21,20 @@ const Logo = ({ className = '', dotClassName = 'text-5xl', badge, floatingBadge 
                 priority
                 className='w-[1.15em] h-[1.15em] object-contain shrink-0'
             />
-            <span className='leading-none'>
+            <span className='relative leading-none'>
                 <span className='text-green-600'>Aboa</span>Bo<span className={`text-green-600 leading-0 ${dotClassName}`}>.</span>
+                {badge && floatingBadge && (
+                    /* em-based offsets keep the superscript visually attached to
+                       the wordmark at every text size, unlike fixed px offsets */
+                    <span className='absolute left-full -top-[0.45em] ml-[0.1em] text-[10px] sm:text-xs leading-none font-semibold px-2 sm:px-3 py-1 rounded-full text-white bg-green-500 whitespace-nowrap'>
+                        {badge}
+                    </span>
+                )}
             </span>
-            {badge && (
-                floatingBadge ? (
-                    <p className='absolute text-[10px] sm:text-xs font-semibold -top-1 -right-5 sm:-right-8 px-2 sm:px-3 p-0.5 rounded-full flex items-center gap-2 text-white bg-green-500'>
-                        {badge}
-                    </p>
-                ) : (
-                    <p className='self-start text-[10px] sm:text-xs font-semibold px-2 sm:px-3 py-0.5 rounded-full text-white bg-green-500'>
-                        {badge}
-                    </p>
-                )
+            {badge && !floatingBadge && (
+                <p className='self-start text-[10px] sm:text-xs font-semibold px-2 sm:px-3 py-0.5 rounded-full text-white bg-green-500'>
+                    {badge}
+                </p>
             )}
         </Link>
     )

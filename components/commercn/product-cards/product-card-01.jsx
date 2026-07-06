@@ -52,7 +52,7 @@ export function ProductCardOne() {
 				</div>
 
 				<div className="flex items-center justify-between">
-					<p className="text-2xl font-bold">${productData.price.toFixed(2)}</p>
+					<p className="text-2xl font-bold">{process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || 'GH₵'}{productData.price.toFixed(2)}</p>
 
 					<Button>Add to Cart</Button>
 				</div>
