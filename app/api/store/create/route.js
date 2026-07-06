@@ -11,6 +11,9 @@ const ALLOWED_CAMPUSES = ["Nyankpala", "Dungu", "City"];
 export async function POST (request){
     try{
         const {userId} = getAuth(request)
+        if(!userId){
+            return NextResponse.json({error:"Unauthorized"}, {status:401})
+        }
 
         // getting data from form
         const formData = await request.formData()
@@ -123,12 +126,15 @@ export async function POST (request){
 export async function GET(request) {
     try{
         const {userId} = getAuth(request);
+        if(!userId){
+            return NextResponse.json({error:"Unauthorized"}, {status:401})
+        }
 
         // check user is already a registered store
 
         const store = await prisma.store.findFirst({
             where:{userId: userId}
-        }) 
+        })
 
         // if store is already registered send status
 

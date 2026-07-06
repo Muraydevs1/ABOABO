@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getAuth } from "@clerk/nextjs/server"
 import { PaymentMethod } from "@prisma/client";
+import { rateLimit, tooManyRequestsResponse } from "@/lib/rateLimit";
 
 const PAYSTACK_INITIALIZE_URL = "https://api.paystack.co/transaction/initialize";
 
@@ -43,7 +44,13 @@ export async function POST(request) {
         if(!userId){
             return new Response(JSON.stringify({error: "not authorized"}), {status: 401})
         }
-        
+
+        // Rate limit order creation: 10 orders / minute / user.
+        const limit = rateLimit({ key: `orders:${userId}`, limit: 10, windowMs: 60_000 })
+        if (!limit.success) {
+            return tooManyRequestsResponse(limit.retryAfterMs)
+        }
+
         const {addressId, items, paymentMethod} = await request.json()
         const allowedPaymentMethods = ['COD', 'MoMo']
          
@@ -176,6 +183,9 @@ export async function POST(request) {
 export async function GET(request) {
     try {
         const {userId} = getAuth(request);
+        if(!userId){
+            return new Response(JSON.stringify({error: "not authorized"}), {status: 401})
+        }
         const orders = await prisma.order.findMany({
             where: {
                 userId,

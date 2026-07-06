@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getAuth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { rateLimit, tooManyRequestsResponse } from "@/lib/rateLimit";
 
 // ADD NEW RATING
 export async function POST(request) {
@@ -10,6 +11,12 @@ export async function POST(request) {
 
         if (!userId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        // Rate limit review submissions: 20 / minute / user.
+        const limit = rateLimit({ key: `rating:${userId}`, limit: 20, windowMs: 60_000 });
+        if (!limit.success) {
+            return tooManyRequestsResponse(limit.retryAfterMs);
         }
 
         // Validate rating is an integer between 1 and 5
