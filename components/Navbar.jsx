@@ -1,6 +1,7 @@
 'use client'
 import { PackageIcon, Search, ShoppingCart, ShoppingCartIcon, StoreIcon } from "lucide-react";
 import Link from "next/link";
+import Logo from "@/components/Logo";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
@@ -49,12 +50,7 @@ const Navbar = () => {
             <div className="mx-6">
                 <div className="flex items-center justify-between max-w-7xl mx-auto py-4  transition-all">
 
-                    <Link href="/" className="relative text-4xl font-semibold text-slate-700">
-                        <span className="text-green-600">Aboa</span>Bo<span className="text-green-600 text-5xl leading-0">.</span>
-                        <p className="absolute text-xs font-semibold -top-1 -right-8 px-3 p-0.5 rounded-full flex items-center gap-2 text-white bg-green-500">
-                            UDS
-                        </p>
-                    </Link>
+                    <Logo className="text-2xl min-[400px]:text-3xl sm:text-4xl gap-1.5 sm:gap-2 mr-4" dotClassName="text-3xl min-[400px]:text-4xl sm:text-5xl" badge="UDS" floatingBadge />
 
                     {/* Desktop Menu */}
                     <div className="hidden sm:flex items-center gap-4 lg:gap-8 text-slate-600">

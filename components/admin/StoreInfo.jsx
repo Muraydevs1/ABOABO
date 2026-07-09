@@ -1,6 +1,7 @@
 'use client'
 import Image from "next/image"
 import { MapPin, Mail, Phone } from "lucide-react"
+import { ikImage } from "@/lib/imageUrl"
 
 const StoreInfo = ({store}) => {
     const rawContact = store?.contact?.trim() || ""
@@ -9,7 +10,7 @@ const StoreInfo = ({store}) => {
 
     return (
         <div className="flex-1 space-y-2 text-sm">
-            <Image width={100} height={100} src={store.logo} alt={store.name} className="max-w-20 max-h-20 object-contain shadow rounded-full max-sm:mx-auto" />
+            <Image width={100} height={100} src={ikImage(store.logo, { width: 160 })} alt={store.name} className="max-w-20 max-h-20 object-contain shadow rounded-full max-sm:mx-auto" />
             <div className="flex flex-col sm:flex-row gap-3 items-center">
                 <h3 className="text-xl font-semibold text-slate-800"> {store.name} </h3>
                 <span className="text-sm">@{store.username}</span>

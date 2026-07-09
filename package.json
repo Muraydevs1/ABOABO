@@ -17,17 +17,21 @@
     "@prisma/client": "^7.6.0",
     "@reduxjs/toolkit": "^2.8.2",
     "axios": "^1.14.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "inngest": "^4.1.0",
     "lucide-react": "^0.525.0",
     "next": "^15.5.14",
     "openai": "^6.34.0",
+    "radix-ui": "^1.6.1",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "react-hot-toast": "^2.5.2",
     "react-redux": "^9.2.0",
     "recharts": "^3.1.2",
-    "stripe": "^22.1.0"
+    "stripe": "^22.1.0",
+    "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

@@ -1,4 +1,4 @@
-import { imagekit } from '@/configs/imageKit';
+import { imagekit, UPLOAD_PRE_TRANSFORMATION, buildImageUrl } from '@/configs/imageKit';
 import { prisma } from '@/lib/prisma';
 import authSeller from '@/middlewares/authSeller';
 import {getAuth} from '@clerk/nextjs/server';
@@ -37,16 +37,11 @@ export async function POST(request) {
                 file: base64File,
                 fileName: image.name || `${name}-${index + 1}`,
                 folder: "products",
+                // Optimize at ingest: resize to <=1600px, auto quality, WebP,
+                // EXIF orientation normalized. Shared strategy from configs/imageKit.
+                transformation: { pre: UPLOAD_PRE_TRANSFORMATION },
             })
-            const url = imagekit.helper.buildSrc({
-                urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT,
-                src: response.filePath,
-                transformation:[
-                    {quality: 'auto'},
-                    {format: 'webp'},
-                    {width: '1024'}
-                ]
-            }) || response.url
+            const url = buildImageUrl(response.filePath, response.url)
             return url
         }))
 

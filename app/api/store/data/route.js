@@ -32,7 +32,20 @@ export async function GET(request) {
             return NextResponse.json({ error: "store not found" }, { status: 404 });
         }
 
-        const { Product, ...storeInfo } = store;
+        // Strip sensitive/internal fields before returning to the public storefront.
+        // email/contact/address are intentionally kept — the storefront renders them
+        // as the seller's public contact (Call Store / WhatsApp). userId (Clerk ID)
+        // and courseId (student ID) are private and never exposed.
+        const {
+            Product,
+            userId,
+            courseId,
+            status,
+            isActive,
+            createdAt,
+            updatedAt,
+            ...storeInfo
+        } = store;
         return NextResponse.json({ store: { ...storeInfo, products: Product } });
     } catch (error) {
         console.log(error);

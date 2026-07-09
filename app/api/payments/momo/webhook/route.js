@@ -37,24 +37,58 @@ export async function POST(request) {
             return NextResponse.json({ received: true });
         }
 
-        const metadata = eventPayload?.data?.metadata || {};
+        const eventData = eventPayload?.data || {};
+        const metadata = eventData.metadata || {};
         const ordersId = Array.isArray(metadata.ordersId) ? metadata.ordersId : [];
+        const reference = eventData.reference || null;
 
         if (!ordersId.length) {
             return NextResponse.json({ received: true });
         }
 
+        // Verify the referenced MoMo orders actually exist
+        const orders = await prisma.order.findMany({
+            where: { id: { in: ordersId }, paymentMethod: PaymentMethod.MoMo },
+        });
+
+        if (orders.length !== ordersId.length) {
+            return NextResponse.json(
+                { error: "referenced orders not found" },
+                { status: 404 }
+            );
+        }
+
+        // Idempotency: if these orders are already paid, this is a duplicate/replayed
+        // event — acknowledge without reprocessing.
+        if (orders.every((order) => order.isPaid)) {
+            return NextResponse.json({ received: true, status: "already processed", reference });
+        }
+
+        // Reconcile the charged amount against the server-calculated order total.
+        // Paystack sends `amount` in the smallest currency unit (pesewas for GHS),
+        // matching how the payment was initialized (Math.round(total * 100)).
+        const expectedAmount = Math.round(
+            orders.reduce((sum, order) => sum + order.total, 0) * 100
+        );
+
+        if (typeof eventData.amount !== "number" || eventData.amount !== expectedAmount) {
+            return NextResponse.json({ error: "amount mismatch" }, { status: 400 });
+        }
+
+        // Mark as paid. Scoping to isPaid:false keeps this write idempotent even
+        // under concurrent/duplicate delivery.
         await prisma.order.updateMany({
             where: {
                 id: { in: ordersId },
                 paymentMethod: PaymentMethod.MoMo,
+                isPaid: false,
             },
             data: {
                 isPaid: true,
             },
         });
 
-        return NextResponse.json({ received: true });
+        return NextResponse.json({ received: true, reference });
     } catch (error) {
         console.error(error);
         return NextResponse.json(

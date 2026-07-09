@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Logo from "@/components/Logo";
 
 const Footer = () => {
 
@@ -21,9 +22,7 @@ const Footer = () => {
             <div className="max-w-7xl mx-auto">
                 <div className="flex flex-col md:flex-row items-start justify-between gap-10 py-10 border-b border-slate-500/30 text-slate-500">
                     <div>
-                        <Link href="/" className="text-4xl font-semibold text-slate-700">
-                            <span className="text-green-600">Aboa</span>Bo<span className="text-green-600 text-5xl leading-0">.</span>
-                        </Link>
+                        <Logo className="text-4xl gap-2" />
                         <p className="max-w-[410px] mt-6 text-sm text-wrap"><span className="font-semibold">AMARABA</span> to ABOABO, your destination for student-driven products and services. Discover what’s being sold around you - all in one place.</p>
                     </div>
                     <div className="flex flex-wrap justify-between w-full md:w-[30%] gap-5 text-sm ">
@@ -32,9 +31,9 @@ const Footer = () => {
                                 <h3 className="font-medium text-slate-700 md:mb-5 mb-3">{section.title}</h3>
                                 <ul className="space-y-2.5">
                                     {section.links.map((link, i) => (
-                                        <li key={i} className="flex items-center gap-2">
-                                            {link.icon && <link.icon />}
-                                            <Link href={link.path} className="hover:underline transition">{link.text}</Link>
+                                        <li key={i} className="flex items-center gap-2 min-w-0">
+                                            {link.icon && <span className="shrink-0"><link.icon /></span>}
+                                            <Link href={link.path} className="hover:underline transition break-all">{link.text}</Link>
                                         </li>
                                     ))}
                                 </ul>

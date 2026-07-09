@@ -2,6 +2,7 @@ import { openai } from "@/configs/openAi";
 import authSeller from "@/middlewares/authSeller";
 import { getAuth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { rateLimit, tooManyRequestsResponse } from "@/lib/rateLimit";
 
 async function main(base64Image, mimeType) {
      const messages = [
@@ -53,10 +54,20 @@ async function main(base64Image, mimeType) {
 export async function POST(request) {
     try{
         const {userId} = getAuth(request)
+        if(!userId){
+            return NextResponse.json({error:"Unauthorized"}, {status:401})
+        }
         const isSeller = await authSeller(userId)
         if(!isSeller){
             return NextResponse.json({error:"not authorised"}, {status:401})
         }
+
+        // Rate limit: this endpoint calls a paid AI model. 10 requests / minute / user.
+        const limit = rateLimit({ key: `ai:${userId}`, limit: 10, windowMs: 60_000 })
+        if (!limit.success) {
+            return tooManyRequestsResponse(limit.retryAfterMs)
+        }
+
         const {base64Image, mimeType} = await request.json();
         const result = await main(base64Image, mimeType)
         return NextResponse.json({...result})

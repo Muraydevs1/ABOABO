@@ -1,4 +1,4 @@
-import { imagekit } from '@/configs/imageKit';
+import { imagekit, UPLOAD_PRE_TRANSFORMATION, buildImageUrl } from '@/configs/imageKit';
 import { prisma } from '@/lib/prisma';
 import { validateCourseId } from '@/lib/utils/courseId';
 import {getAuth} from '@clerk/nextjs/server';
@@ -11,6 +11,9 @@ const ALLOWED_CAMPUSES = ["Nyankpala", "Dungu", "City"];
 export async function POST (request){
     try{
         const {userId} = getAuth(request)
+        if(!userId){
+            return NextResponse.json({error:"Unauthorized"}, {status:401})
+        }
 
         // getting data from form
         const formData = await request.formData()
@@ -85,10 +88,13 @@ export async function POST (request){
         const response = await imagekit.files.upload({
             file:base64File,
             fileName: image.name,
-            folder: 'logos'
+            folder: 'logos',
+            // Same ingest optimization as product images: resize <=1600px,
+            // auto quality, WebP, EXIF orientation normalized.
+            transformation: { pre: UPLOAD_PRE_TRANSFORMATION },
         });
 
-        const optimizedImage = response.url;
+        const optimizedImage = buildImageUrl(response.filePath, response.url);
 
         const newStore = await prisma.store.create({
             data:{
@@ -123,12 +129,15 @@ export async function POST (request){
 export async function GET(request) {
     try{
         const {userId} = getAuth(request);
+        if(!userId){
+            return NextResponse.json({error:"Unauthorized"}, {status:401})
+        }
 
         // check user is already a registered store
 
         const store = await prisma.store.findFirst({
             where:{userId: userId}
-        }) 
+        })
 
         // if store is already registered send status
 

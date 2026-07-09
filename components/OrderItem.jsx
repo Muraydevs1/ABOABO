@@ -1,5 +1,6 @@
 'use client'
 import Image from "next/image";
+import { ikImage } from "@/lib/imageUrl";
 import { DotIcon } from "lucide-react";
 import { useSelector } from "react-redux";
 import Rating from "./Rating";
@@ -29,7 +30,7 @@ const OrderItem = ({ order }) => {
                                 <div className="w-20 aspect-square bg-slate-100 flex items-center justify-center rounded-md">
                                     <Image
                                         className="h-14 w-auto"
-                                        src={item.product.images[0]}
+                                        src={ikImage(item.product.images[0], { width: 120 })}
                                         alt="product_img"
                                         width={50}
                                         height={50}
@@ -37,7 +38,7 @@ const OrderItem = ({ order }) => {
                                 </div>
                                 <div className="flex flex-col justify-center text-sm">
                                     <p className="font-medium text-slate-600 text-base">{item.product.name}</p>
-                                    <p>{currency}{item.price} Qty : {item.quantity} </p>
+                                    <p><span className="font-price">{currency}{item.price}</span> Qty : {item.quantity} </p>
                                     <p className="mb-1">{new Date(order.createdAt).toDateString()}</p>
                                     <div>
                                         {ratings.find(rating => order.id === rating.orderId && item.product.id === rating.productId)
@@ -51,7 +52,7 @@ const OrderItem = ({ order }) => {
                     </div>
                 </td>
 
-                <td className="text-center max-md:hidden">{currency}{order.total}</td>
+                <td className="text-center max-md:hidden font-price">{currency}{order.total}</td>
 
                 <td className="text-left max-md:hidden">
                     <div className="space-y-0.5">

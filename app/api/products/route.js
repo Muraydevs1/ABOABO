@@ -11,7 +11,11 @@ export async function GET(request) {
                         user: {select:{name:true, image:true}}
                     }
                 },
-                store: true,
+                // Public route: expose only non-sensitive store fields.
+                // Never leak userId (Clerk ID), courseId (student ID), email, or contact here.
+                store: {
+                    select: { name: true, username: true, logo: true, isActive: true }
+                },
             },
             orderBy: {createdAt: "desc"}
         })

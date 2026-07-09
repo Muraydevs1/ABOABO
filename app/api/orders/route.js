@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getAuth } from "@clerk/nextjs/server"
 import { PaymentMethod } from "@prisma/client";
+import { rateLimit, tooManyRequestsResponse } from "@/lib/rateLimit";
 
 const PAYSTACK_INITIALIZE_URL = "https://api.paystack.co/transaction/initialize";
 
@@ -43,7 +44,13 @@ export async function POST(request) {
         if(!userId){
             return new Response(JSON.stringify({error: "not authorized"}), {status: 401})
         }
-        
+
+        // Rate limit order creation: 10 orders / minute / user.
+        const limit = rateLimit({ key: `orders:${userId}`, limit: 10, windowMs: 60_000 })
+        if (!limit.success) {
+            return tooManyRequestsResponse(limit.retryAfterMs)
+        }
+
         const {addressId, items, paymentMethod} = await request.json()
         const allowedPaymentMethods = ['COD', 'MoMo']
          
@@ -64,17 +71,31 @@ export async function POST(request) {
         }
     
     // GROUP ORDERS BY STORE USING MAP
+        const MAX_QUANTITY_PER_ITEM = 100
         const ordersbyStore = new Map()
         for(const item of items){
+            // Validate quantity: integer, > 0, within a sane maximum
+            const quantity = Number(item.quantity)
+            if (!Number.isInteger(quantity) || quantity <= 0 || quantity > MAX_QUANTITY_PER_ITEM) {
+                return new Response(JSON.stringify({ error: "invalid item quantity" }), { status: 400 })
+            }
+
             const product = await prisma.product.findUnique({where: {id: item.id}})
             if (!product) {
                 return new Response(JSON.stringify({ error: "product not found" }), { status: 404 });
             }
+
+            // Reject out-of-stock products before creating any order or initializing payment
+            if (!product.inStock) {
+                return new Response(JSON.stringify({ error: "product is out of stock" }), { status: 400 });
+            }
+
             const storeId = product.storeId
             if(!ordersbyStore.has(storeId)){
                 ordersbyStore.set(storeId, [])
             }
-            ordersbyStore.get(storeId).push({...item, price: product.price})
+            // Use the validated numeric quantity and the trusted server-side price
+            ordersbyStore.get(storeId).push({...item, quantity, price: product.price})
         }
         let ordersId = [];
         let fullAmount = 0;
@@ -162,6 +183,9 @@ export async function POST(request) {
 export async function GET(request) {
     try {
         const {userId} = getAuth(request);
+        if(!userId){
+            return new Response(JSON.stringify({error: "not authorized"}), {status: 401})
+        }
         const orders = await prisma.order.findMany({
             where: {
                 userId,
