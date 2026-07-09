@@ -7,6 +7,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Counter from "./Counter";
 import { useDispatch, useSelector } from "react-redux";
+import { ikImage } from "@/lib/imageUrl";
 
 const ProductDetails = ({ product }) => {
 
@@ -34,12 +35,12 @@ const ProductDetails = ({ product }) => {
                 <div className="flex sm:flex-col gap-3 max-sm:overflow-x-auto max-sm:w-full no-scrollbar">
                     {product.images.map((image, index) => (
                         <div key={index} onClick={() => setMainImage(product.images[index])} className="bg-slate-100 flex items-center justify-center size-26 shrink-0 rounded-lg group cursor-pointer">
-                            <Image src={image} className="group-hover:scale-103 group-active:scale-95 transition" alt="" width={45} height={45} />
+                            <Image src={ikImage(image, { width: 200 })} className="group-hover:scale-103 group-active:scale-95 transition" alt="" width={45} height={45} />
                         </div>
                     ))}
                 </div>
                 <div className="flex justify-center items-center h-100 sm:size-113 max-w-full bg-slate-100 rounded-lg ">
-                    <Image src={mainImage} alt="" width={250} height={250} />
+                    <Image src={ikImage(mainImage, { width: 900 })} alt={product.name} width={250} height={250} priority sizes='(max-width: 640px) 90vw, 452px' />
                 </div>
             </div>
             <div className="flex-1">

@@ -7,6 +7,7 @@ import React from 'react'
 import toast from 'react-hot-toast'
 import { useDispatch, useSelector } from 'react-redux'
 import { addToCart } from '@/lib/features/cart/cartSlice'
+import { ikImage } from '@/lib/imageUrl'
 import { Card, CardContent, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 
@@ -48,8 +49,9 @@ const ProductCard = ({ product }) => {
                         <Image
                             width={500}
                             height={500}
+                            sizes='(max-width: 640px) 45vw, 240px'
                             className='max-h-32 sm:max-h-44 w-auto object-contain group-hover:scale-110 transition duration-300'
-                            src={product.images[0]}
+                            src={ikImage(product.images[0], { width: 400 })}
                             alt={product.name}
                         />
                     </div>

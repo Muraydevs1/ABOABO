@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 import { MailIcon, MapPinIcon, MessageCircleIcon, PhoneCallIcon, PhoneIcon } from "lucide-react"
 import Loading from "@/components/Loading"
 import Image from "next/image"
+import { ikImage } from "@/lib/imageUrl"
 import toast from "react-hot-toast"
 import axios from "axios"
 
@@ -46,7 +47,7 @@ export default function StoreShop() {
             {storeInfo && (
                 <div className="max-w-7xl mx-auto bg-slate-50 rounded-xl p-6 md:p-10 mt-6 flex flex-col md:flex-row items-center gap-6 shadow-xs">
                     <Image
-                        src={storeInfo.logo}
+                        src={ikImage(storeInfo.logo, { width: 320 })}
                         alt={storeInfo.name}
                         className="size-32 sm:size-38 shrink-0 object-cover border-2 border-slate-100 rounded-md"
                         width={200}

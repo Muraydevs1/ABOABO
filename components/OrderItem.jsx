@@ -1,5 +1,6 @@
 'use client'
 import Image from "next/image";
+import { ikImage } from "@/lib/imageUrl";
 import { DotIcon } from "lucide-react";
 import { useSelector } from "react-redux";
 import Rating from "./Rating";
@@ -29,7 +30,7 @@ const OrderItem = ({ order }) => {
                                 <div className="w-20 aspect-square bg-slate-100 flex items-center justify-center rounded-md">
                                     <Image
                                         className="h-14 w-auto"
-                                        src={item.product.images[0]}
+                                        src={ikImage(item.product.images[0], { width: 120 })}
                                         alt="product_img"
                                         width={50}
                                         height={50}

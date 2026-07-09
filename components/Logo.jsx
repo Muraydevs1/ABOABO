@@ -18,7 +18,6 @@ const Logo = ({ className = '', dotClassName = 'text-5xl', badge, floatingBadge 
                 alt="ABOABO logo"
                 width={48}
                 height={48}
-                priority
                 className='w-[1.15em] h-[1.15em] object-contain shrink-0'
             />
             <span className='relative leading-none'>

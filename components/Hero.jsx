@@ -27,7 +27,7 @@ const Hero = () => {
                         </div>
                         <Link href='/shop' className='inline-block bg-slate-800 text-white text-sm py-2.5 px-7 sm:py-5 sm:px-12 mt-4 sm:mt-10 rounded-md hover:bg-slate-900 hover:scale-103 active:scale-95 transition'>SHOP NOW</Link>
                     </div>
-                    <Image className='sm:absolute bottom-0 right-0 md:right-10 w-full sm:max-w-sm' src={assets.hero_model_img} alt="" />
+                    <Image className='sm:absolute bottom-0 right-0 md:right-10 w-full sm:max-w-sm' src={assets.hero_model_img} alt="" priority sizes='(max-width: 640px) 100vw, 384px' />
                 </div>
                 <div className='flex flex-col md:flex-row xl:flex-col gap-5 w-full xl:max-w-sm text-sm text-slate-600'>
                     <Link href='/shop' className='flex-1 flex items-center justify-between w-full bg-[#2dc653] rounded-3xl p-6 px-8 group'>
