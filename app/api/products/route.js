@@ -1,9 +1,17 @@
 import { prisma } from "@/lib/prisma";
+import { normalizeSearchQuery, buildSearchWhere, rankSearchResults } from "@/lib/search";
 
 export async function GET(request) {
     try{
-        let products = await prisma.product.findMany({
-            where: {inStock: true},
+        const { searchParams } = new URL(request.url)
+        const search = normalizeSearchQuery(searchParams.get('search'))
+
+        const products = await prisma.product.findMany({
+            where: {
+                inStock: true,
+                store: { isActive: true },
+                ...(search.stems.length ? { AND: buildSearchWhere(search.stems) } : {}),
+            },
             include: {
                 rating:{
                     select:{
@@ -20,11 +28,11 @@ export async function GET(request) {
             orderBy: {createdAt: "desc"}
         })
 
-        // REMOVE PRODUCTS WITH STORE DISABLE FALSE
-        products = products.filter(product => product.store.isActive)
-        return new Response(JSON.stringify({products}), {status: 200})
+        return new Response(JSON.stringify({
+            products: search.stems.length ? rankSearchResults(products, search) : products
+        }), {status: 200})
     } catch (error){
         console.log(error)
-        return new Response(JSON.stringify({error: error.code || error.message}), {status: 400})    
+        return new Response(JSON.stringify({error: error.code || error.message}), {status: 400})
     }
 }

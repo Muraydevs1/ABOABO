@@ -1,5 +1,5 @@
 'use client'
-import { SearchIcon, StarIcon } from "lucide-react"
+import { SearchIcon, StarIcon, XIcon } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
@@ -57,9 +57,18 @@ const ShopFilters = ({
                         placeholder="Search products..."
                         value={filters.search}
                         onChange={(e) => onFilterChange('search', e.target.value)}
-                        className="pl-9"
+                        className="px-9"
                         aria-label="Search products"
                     />
+                    {filters.search && (
+                        <button
+                            onClick={() => onFilterChange('search', '')}
+                            aria-label="Clear search"
+                            className="text-muted-foreground absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 transition-colors hover:bg-slate-100 hover:text-slate-700"
+                        >
+                            <XIcon className="size-3.5" />
+                        </button>
+                    )}
                 </div>
             </FilterSection>
 

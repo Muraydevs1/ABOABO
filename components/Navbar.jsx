@@ -22,7 +22,8 @@ const Navbar = () => {
 
     const handleSearch = (e) => {
         e.preventDefault()
-        router.push(`/shop?search=${search}`)
+        const query = search.trim()
+        router.push(query ? `/shop?search=${encodeURIComponent(query)}` : '/shop')
     }
 
     useEffect(() => {

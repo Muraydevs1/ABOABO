@@ -1,8 +1,9 @@
 'use client'
-import { Suspense, useEffect, useMemo, useState } from "react"
+import { Suspense, useEffect, useMemo, useRef, useState } from "react"
 import ProductCard from "@/components/ProductCard"
 import ShopFilters from "@/components/shop/ShopFilters"
-import { MoveLeftIcon, PackageSearchIcon, SlidersHorizontalIcon, XIcon } from "lucide-react"
+import { useDebounce } from "@/lib/hooks/useDebounce"
+import { Loader2Icon, MoveLeftIcon, PackageSearchIcon, SlidersHorizontalIcon, XIcon } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useSelector } from "react-redux"
 import axios from "axios"
@@ -42,7 +43,7 @@ const defaultCategoryOptions = [
 
 const campusOptions = ["Nyankpala", "Dungu", "City"]
 
-const sortOptions = [
+const baseSortOptions = [
     { key: 'newest', name: 'Newest' },
     { key: 'oldest', name: 'Oldest' },
     { key: 'price_asc', name: 'Price: Low to High' },
@@ -90,27 +91,62 @@ function ShopContent() {
 
     const [products, setProducts] = useState([])
     const [loading, setLoading] = useState(true)
-    const [sort, setSort] = useState('newest')
+    const [searching, setSearching] = useState(false)
+    const [sort, setSort] = useState(initialSearch ? 'relevance' : 'newest')
     const [filters, setFilters] = useState({ ...emptyFilters, search: initialSearch })
 
+    const debouncedSearch = useDebounce(filters.search.trim(), 300)
+    const hasSearch = Boolean(debouncedSearch)
+    // Tracks the last search value that came from (or was written to) the URL,
+    // so back/forward navigation is never overwritten by a stale debounce.
+    const urlSearchRef = useRef(initialSearch)
+
+    // Search runs server-side (ranked in /api/products); refetch per query.
     useEffect(() => {
+        const controller = new AbortController()
         const fetchProducts = async () => {
             try {
-                const { data } = await axios.get('/api/products')
+                setSearching(true)
+                const query = debouncedSearch ? `?search=${encodeURIComponent(debouncedSearch)}` : ''
+                const { data } = await axios.get(`/api/products${query}`, { signal: controller.signal })
                 setProducts(data.products || [])
             } catch (error) {
+                if (axios.isCancel(error)) return
                 console.log(error)
                 setProducts([])
             } finally {
-                setLoading(false)
+                if (!controller.signal.aborted) {
+                    setLoading(false)
+                    setSearching(false)
+                }
             }
         }
         fetchProducts()
-    }, [])
+        return () => controller.abort()
+    }, [debouncedSearch])
 
+    // URL -> input (navbar searches, back/forward navigation)
     useEffect(() => {
-        setFilters((prev) => ({ ...prev, search: initialSearch }))
+        urlSearchRef.current = initialSearch
+        setFilters((prev) => prev.search === initialSearch ? prev : { ...prev, search: initialSearch })
     }, [initialSearch])
+
+    // input -> URL, so searches are shareable and survive back-navigation
+    useEffect(() => {
+        if (debouncedSearch === urlSearchRef.current) return
+        urlSearchRef.current = debouncedSearch
+        router.replace(debouncedSearch ? `/shop?search=${encodeURIComponent(debouncedSearch)}` : '/shop', { scroll: false })
+    }, [debouncedSearch, router])
+
+    // Searches default to relevance order (the API's ranking); restore
+    // "newest" when the search is cleared. Explicit user choices are kept.
+    useEffect(() => {
+        setSort((prev) => {
+            if (hasSearch && prev === 'newest') return 'relevance'
+            if (!hasSearch && prev === 'relevance') return 'newest'
+            return prev
+        })
+    }, [hasSearch])
 
     const onFilterChange = (key, value) => {
         setFilters((prev) => ({ ...prev, [key]: value }))
@@ -119,7 +155,6 @@ function ShopContent() {
     const resetFilters = () => {
         setFilters({ ...emptyFilters })
         setSort('newest')
-        if (initialSearch) router.push('/shop')
     }
 
     const categoryOptions = useMemo(() => {
@@ -141,16 +176,14 @@ function ShopContent() {
         return [0, Math.max(50, Math.ceil(max / 50) * 50)]
     }, [products])
 
+    const sortOptions = useMemo(
+        () => hasSearch ? [{ key: 'relevance', name: 'Relevance' }, ...baseSortOptions] : baseSortOptions,
+        [hasSearch]
+    )
+
     const filteredProducts = useMemo(() => {
         let list = [...products]
-        const search = filters.search.trim().toLowerCase()
 
-        if (search) {
-            list = list.filter((product) =>
-                product.name?.toLowerCase().includes(search) ||
-                product.description?.toLowerCase().includes(search)
-            )
-        }
         if (filters.category) {
             list = list.filter((product) => product.category === filters.category)
         }
@@ -172,6 +205,8 @@ function ShopContent() {
         }
 
         switch (sort) {
+            case 'relevance':
+                break // server already returns results in relevance order
             case 'oldest':
                 list.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)); break
             case 'price_asc':
@@ -186,7 +221,8 @@ function ShopContent() {
                 list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
         }
         return list
-    }, [products, filters, sort])
+        // search is intentionally absent: it's applied server-side via debouncedSearch
+    }, [products, filters.category, filters.campus, filters.minPrice, filters.maxPrice, filters.minRating, sort])
 
     const activeChips = useMemo(() => {
         const chips = []
@@ -210,7 +246,6 @@ function ShopContent() {
             onFilterChange('minRating', '')
         } else if (key === 'search') {
             onFilterChange('search', '')
-            if (initialSearch) router.push('/shop')
         } else {
             onFilterChange(key, '')
         }
@@ -295,7 +330,8 @@ function ShopContent() {
                         {/* Active filter chips + result count */}
                         {!loading && (
                             <div className="mb-5 flex flex-wrap items-center gap-2">
-                                <p className="text-sm text-slate-500">
+                                <p className="flex items-center gap-1.5 text-sm text-slate-500">
+                                    {searching && <Loader2Icon className="size-3.5 animate-spin text-green-500" aria-hidden="true" />}
                                     {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'}
                                 </p>
                                 {activeChips.map((chip) => (
@@ -325,7 +361,7 @@ function ShopContent() {
                         {loading ? (
                             <ProductGridSkeleton />
                         ) : filteredProducts.length ? (
-                            <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:gap-6">
+                            <div className={`grid grid-cols-2 gap-3 transition-opacity duration-200 sm:flex sm:flex-wrap sm:gap-6 ${searching ? 'opacity-60' : ''}`}>
                                 {filteredProducts.map((product) => <ProductCard key={product.id} product={product} />)}
                             </div>
                         ) : (
