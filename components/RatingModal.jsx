@@ -19,10 +19,10 @@ const RatingModal = ({ ratingModal, setRatingModal }) => {
     const dispatch = useDispatch()
 
     const handleSubmit = async () => {
-        if (rating < 0 || rating > 5) {
+        if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
             return toast('Please select a rating');
         }
-        if (review.length < 5) {
+        if (review.trim().length < 5) {
             return toast('write a short review');
         }
         try {

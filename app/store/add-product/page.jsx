@@ -5,10 +5,13 @@ import axios from "axios"
 import Image from "next/image"
 import { useState } from "react"
 import { toast } from "react-hot-toast"
+import { validateProductSubmission } from "@/lib/validators"
+import { validateImageFile } from "@/lib/utils/fieldValidation"
+import { PRODUCT_CATEGORIES } from "@/lib/constants"
 
 export default function StoreAddProduct() {
 
-    const categories = ['Electronics', 'Clothing', 'Home & Kitchen', 'Beauty & Health', 'Toys & Games', 'Sports & Outdoors', 'Books & Media', 'Food & Drink', 'Hobbies & Crafts','Services','Books','Others']
+    const categories = PRODUCT_CATEGORIES
 
     const [images, setImages] = useState({ 1: null, 2: null, 3: null, 4: null })
     const [productInfo, setProductInfo] = useState({
@@ -18,6 +21,7 @@ export default function StoreAddProduct() {
         price: 0,
         category: "",
     })
+    const [errors, setErrors] = useState({})
     const [loading, setLoading] = useState(false)
     const [aiUsed, setAiUsed] = useState(false)
 
@@ -26,9 +30,28 @@ export default function StoreAddProduct() {
 
     const onChangeHandler = (e) => {
         setProductInfo({ ...productInfo, [e.target.name]: e.target.value })
+        // clear the field's error as soon as the user edits it
+        if (errors[e.target.name]) setErrors((prev) => ({ ...prev, [e.target.name]: null }))
     }
 
+    const inputClass = (field, base) =>
+        `${base} outline-none border rounded ${errors[field] ? 'border-red-400' : 'border-slate-200'}`
+
+    const FieldError = ({ field }) => errors[field]
+        ? <p className="text-xs text-red-500 mt-1">{errors[field]}</p>
+        : null
+
     const handleUseAI = async (file, key) => {
+        // Reject bad files immediately with a friendly message instead of a
+        // server error after upload.
+        if (file) {
+            const check = validateImageFile(file, { label: 'Product image' })
+            if (!check.isValid) {
+                toast.error(check.error)
+                return
+            }
+        }
+        if (errors.images) setErrors((prev) => ({ ...prev, images: null }))
         setImages(prev=>({...prev, [key]:file}))
 
         if(key === "1" && file && !aiUsed){
@@ -65,24 +88,29 @@ export default function StoreAddProduct() {
     const onSubmitHandler = async (e) => {
         e.preventDefault()
         // Logic to add a product
+
+        // Client-side validation with inline errors — same rules the API
+        // enforces. The form data is never cleared on failure.
+        const selectedImages = Object.values(images).filter(Boolean)
+        const result = validateProductSubmission({ ...productInfo, images: selectedImages })
+        if (!result.valid) {
+            setErrors(result.errors)
+            toast.error(result.error)
+            return
+        }
+        setErrors({})
+
         try {
-            // if no images uploaded
-            if (!images[1] && !images[2] && !images[3] && !images[4]) {
-                toast.error("Please upload at least one product image")
-                return
-            }
             setLoading(true)
             const formData = new FormData()
-            formData.append('name', productInfo.name)
-            formData.append('description', productInfo.description)
-            formData.append('mrp', productInfo.mrp)
-            formData.append('price', productInfo.price)
-            formData.append('category', productInfo.category)
+            formData.append('name', result.value.name)
+            formData.append('description', result.value.description)
+            formData.append('mrp', result.value.mrp)
+            formData.append('price', result.value.price)
+            formData.append('category', result.value.category)
 
             // adding images to formData
-            Object.keys(images).forEach(key => {
-                images[key] && formData.append('images', images[key])              
-            })
+            result.value.images.forEach(image => formData.append('images', image))
 
             const token = await getToken()
             const { data } = await axios.post('/api/store/product', formData, {
@@ -103,6 +131,7 @@ export default function StoreAddProduct() {
             // Reset Images
             setImages({ 1: null, 2: null, 3: null, 4: null })
         } catch (error) {
+            if (error?.response?.data?.errors) setErrors(error.response.data.errors)
             toast.error(error?.response?.data?.error || error.message)
         } finally {
             setLoading(false)
@@ -129,34 +158,40 @@ export default function StoreAddProduct() {
                     </label>
                 ))}
             </div>
+            <FieldError field="images" />
 
             <label htmlFor="" className="flex flex-col gap-2 my-6 ">
                 Name
-                <input type="text" name="name" onChange={onChangeHandler} value={productInfo.name} placeholder="Enter product name" className="w-full max-w-sm p-2 px-4 outline-none border border-slate-200 rounded" required />
+                <input type="text" name="name" onChange={onChangeHandler} value={productInfo.name} placeholder="Enter product name" className={inputClass('name', 'w-full max-w-sm p-2 px-4')} required />
+                <FieldError field="name" />
             </label>
 
             <label htmlFor="" className="flex flex-col gap-2 my-6 ">
                 Description
-                <textarea name="description" onChange={onChangeHandler} value={productInfo.description} placeholder="Enter product description" rows={5} className="w-full max-w-sm p-2 px-4 outline-none border border-slate-200 rounded resize-none" required />
+                <textarea name="description" onChange={onChangeHandler} value={productInfo.description} placeholder="Enter product description" rows={5} className={inputClass('description', 'w-full max-w-sm p-2 px-4 resize-none')} required />
+                <FieldError field="description" />
             </label>
 
             <div className="flex gap-5">
                 <label htmlFor="" className="flex flex-col gap-2 ">
                     Actual Price (GH₵)
-                    <input type="number" name="mrp" onChange={onChangeHandler} value={productInfo.mrp} placeholder="0" rows={5} className="w-full max-w-45 p-2 px-4 outline-none border border-slate-200 rounded resize-none" required />
+                    <input type="number" name="mrp" onChange={onChangeHandler} value={productInfo.mrp} placeholder="0" min="0" step="0.01" className={inputClass('mrp', 'w-full max-w-45 p-2 px-4')} required />
+                    <FieldError field="mrp" />
                 </label>
                 <label htmlFor="" className="flex flex-col gap-2 ">
                     Offer Price (GH₵)
-                    <input type="number" name="price" onChange={onChangeHandler} value={productInfo.price} placeholder="0" rows={5} className="w-full max-w-45 p-2 px-4 outline-none border border-slate-200 rounded resize-none" required />
+                    <input type="number" name="price" onChange={onChangeHandler} value={productInfo.price} placeholder="0" min="0" step="0.01" className={inputClass('price', 'w-full max-w-45 p-2 px-4')} required />
+                    <FieldError field="price" />
                 </label>
             </div>
 
-            <select onChange={e => setProductInfo({ ...productInfo, category: e.target.value })} value={productInfo.category} className="w-full max-w-sm p-2 px-4 my-6 outline-none border border-slate-200 rounded" required>
+            <select onChange={e => { setProductInfo({ ...productInfo, category: e.target.value }); if (errors.category) setErrors((prev) => ({ ...prev, category: null })) }} value={productInfo.category} className={inputClass('category', 'w-full max-w-sm p-2 px-4 mt-6')} required>
                 <option value="">Select a category</option>
                 {categories.map((category) => (
                     <option key={category} value={category}>{category}</option>
                 ))}
             </select>
+            <FieldError field="category" />
 
             <br />
 

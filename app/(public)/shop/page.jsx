@@ -3,6 +3,7 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react"
 import ProductCard from "@/components/ProductCard"
 import ShopFilters from "@/components/shop/ShopFilters"
 import { useDebounce } from "@/lib/hooks/useDebounce"
+import { CAMPUS_OPTIONS, PRODUCT_CATEGORIES } from "@/lib/constants"
 import { Loader2Icon, MoveLeftIcon, PackageSearchIcon, SlidersHorizontalIcon, XIcon } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useSelector } from "react-redux"
@@ -26,22 +27,8 @@ import {
 
 const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || 'GH₵'
 
-const defaultCategoryOptions = [
-    'Electronics',
-    'Clothing',
-    'Home & Kitchen',
-    'Beauty & Health',
-    'Toys & Games',
-    'Sports & Outdoors',
-    'Books & Media',
-    'Food & Drink',
-    'Hobbies & Crafts',
-    'Services',
-    'Books',
-    'Others',
-]
-
-const campusOptions = ["Nyankpala", "Dungu", "City"]
+const defaultCategoryOptions = PRODUCT_CATEGORIES
+const campusOptions = CAMPUS_OPTIONS
 
 const baseSortOptions = [
     { key: 'newest', name: 'Newest' },

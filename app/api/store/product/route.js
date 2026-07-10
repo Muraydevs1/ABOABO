@@ -1,5 +1,6 @@
 import { imagekit, UPLOAD_PRE_TRANSFORMATION, buildImageUrl } from '@/configs/imageKit';
 import { prisma } from '@/lib/prisma';
+import { validateProductSubmission } from '@/lib/validators';
 import authSeller from '@/middlewares/authSeller';
 import {getAuth} from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
@@ -18,16 +19,23 @@ export async function POST(request) {
 
         // get data from the form
         const formData = await request.formData();
-        const name = formData.get('name')
-        const description = formData.get('description')
-        const mrp = Number(formData.get('mrp'))
-        const price = Number(formData.get('price'))
-        const images = formData.getAll('images').filter((image) => image instanceof File && image.size > 0)
-        const category = formData.get('category')
 
-        if(!name || !description || Number.isNaN(mrp) || Number.isNaN(price) || images.length < 1 || !category){
-            return NextResponse.json({error: 'Missing product info or image file'}, {status:400})
+        // Full validation + normalization (lengths, price > 0 and finite,
+        // category allow-list, image count/MIME/size).
+        const result = validateProductSubmission({
+            name: formData.get('name'),
+            description: formData.get('description'),
+            mrp: formData.get('mrp'),
+            price: formData.get('price'),
+            category: formData.get('category'),
+            images: formData.getAll('images').filter((image) => image instanceof File && image.size > 0),
+        })
+
+        if (!result.valid){
+            return NextResponse.json({error: result.error, errors: result.errors}, {status:400})
         }
+
+        const { name, description, mrp, price, category, images } = result.value
 
         // Uploading Images to Imagekit
             const imagesUrl = await Promise.all(images.map(async(image, index) => {
