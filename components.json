@@ -18,6 +18,9 @@
     "hooks": "@/hooks"
   },
   "registries": {
-    "@commercn": "https://commercn.com/r/{name}.json"
+    "@commercn": "https://commercn.com/r/{name}.json",
+    "@bundui": {
+      "url": "https://bundui.io/api/registry/{name}.json"
+    }
   }
 }

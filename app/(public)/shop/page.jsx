@@ -1,11 +1,84 @@
 'use client'
 import { Suspense, useEffect, useMemo, useState } from "react"
 import ProductCard from "@/components/ProductCard"
-import { MoveLeftIcon } from "lucide-react"
+import ShopFilters from "@/components/shop/ShopFilters"
+import { MoveLeftIcon, PackageSearchIcon, SlidersHorizontalIcon, XIcon } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useSelector } from "react-redux"
 import axios from "axios"
-import Loading from "@/components/Loading"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
+import {
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+} from "@/components/ui/sheet"
+
+const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || 'GH₵'
+
+const defaultCategoryOptions = [
+    'Electronics',
+    'Clothing',
+    'Home & Kitchen',
+    'Beauty & Health',
+    'Toys & Games',
+    'Sports & Outdoors',
+    'Books & Media',
+    'Food & Drink',
+    'Hobbies & Crafts',
+    'Services',
+    'Books',
+    'Others',
+]
+
+const campusOptions = ["Nyankpala", "Dungu", "City"]
+
+const sortOptions = [
+    { key: 'newest', name: 'Newest' },
+    { key: 'oldest', name: 'Oldest' },
+    { key: 'price_asc', name: 'Price: Low to High' },
+    { key: 'price_desc', name: 'Price: High to Low' },
+    { key: 'rating_desc', name: 'Top Rated' },
+    { key: 'rating_asc', name: 'Lowest Rated' },
+]
+
+const emptyFilters = {
+    search: '',
+    category: '',
+    campus: '',
+    minPrice: '',
+    maxPrice: '',
+    minRating: '',
+}
+
+const averageRating = (product) => product.rating?.length
+    ? product.rating.reduce((acc, curr) => acc + curr.rating, 0) / product.rating.length
+    : 0
+
+const ProductGridSkeleton = () => (
+    <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:gap-6">
+        {Array.from({ length: 8 }).map((_, index) => (
+            <div key={index} className="w-full max-w-[320px] animate-pulse rounded-xl border border-slate-100 p-4 max-xl:mx-auto sm:w-60">
+                <div className="h-40 rounded-2xl bg-slate-100 sm:h-56" />
+                <div className="mt-4 h-4 w-3/4 rounded bg-slate-100" />
+                <div className="mt-2 h-3 w-1/2 rounded bg-slate-100" />
+                <div className="mt-4 flex items-center justify-between">
+                    <div className="h-5 w-14 rounded bg-slate-100" />
+                    <div className="h-8 w-20 rounded-md bg-slate-100" />
+                </div>
+            </div>
+        ))}
+    </div>
+)
 
 function ShopContent() {
 
@@ -17,29 +90,37 @@ function ShopContent() {
 
     const [products, setProducts] = useState([])
     const [loading, setLoading] = useState(true)
-    const [filters, setFilters] = useState({
-        search: initialSearch,
-        category: '',
-        campus: '',
-        minPrice: '',
-        maxPrice: '',
-        minRating: '',
-        sort: 'newest',
-    })
-    const defaultCategoryOptions = [
-        'Electronics',
-        'Clothing',
-        'Home & Kitchen',
-        'Beauty & Health',
-        'Toys & Games',
-        'Sports & Outdoors',
-        'Books & Media',
-        'Food & Drink',
-        'Hobbies & Crafts',
-        'Services',
-        'Books',
-        'Others',
-    ]
+    const [sort, setSort] = useState('newest')
+    const [filters, setFilters] = useState({ ...emptyFilters, search: initialSearch })
+
+    useEffect(() => {
+        const fetchProducts = async () => {
+            try {
+                const { data } = await axios.get('/api/products')
+                setProducts(data.products || [])
+            } catch (error) {
+                console.log(error)
+                setProducts([])
+            } finally {
+                setLoading(false)
+            }
+        }
+        fetchProducts()
+    }, [])
+
+    useEffect(() => {
+        setFilters((prev) => ({ ...prev, search: initialSearch }))
+    }, [initialSearch])
+
+    const onFilterChange = (key, value) => {
+        setFilters((prev) => ({ ...prev, [key]: value }))
+    }
+
+    const resetFilters = () => {
+        setFilters({ ...emptyFilters })
+        setSort('newest')
+        if (initialSearch) router.push('/shop')
+    }
 
     const categoryOptions = useMemo(() => {
         const source = allProducts.length ? allProducts : products
@@ -47,126 +128,222 @@ function ShopContent() {
         return [...new Set([...defaultCategoryOptions, ...dynamicCategories])]
     }, [allProducts, products])
 
-    const campusOptions = ["Nyankpala", "Dungu", "City"]
+    const categoryCounts = useMemo(() => {
+        return products.reduce((acc, product) => {
+            if (product.category) acc[product.category] = (acc[product.category] || 0) + 1
+            return acc
+        }, {})
+    }, [products])
 
-    const fetchProducts = async () => {
-        try {
-            setLoading(true)
-            const query = new URLSearchParams()
+    const priceBounds = useMemo(() => {
+        if (!products.length) return [0, 1000]
+        const max = Math.max(...products.map((product) => product.price))
+        return [0, Math.max(50, Math.ceil(max / 50) * 50)]
+    }, [products])
 
-            Object.entries(filters).forEach(([key, value]) => {
-                if (value !== '' && value !== null && value !== undefined) {
-                    query.set(key, value)
-                }
+    const filteredProducts = useMemo(() => {
+        let list = [...products]
+        const search = filters.search.trim().toLowerCase()
+
+        if (search) {
+            list = list.filter((product) =>
+                product.name?.toLowerCase().includes(search) ||
+                product.description?.toLowerCase().includes(search)
+            )
+        }
+        if (filters.category) {
+            list = list.filter((product) => product.category === filters.category)
+        }
+        if (filters.campus) {
+            const campus = filters.campus.toLowerCase()
+            list = list.filter((product) =>
+                (product.store?.campus || '').toLowerCase().includes(campus) ||
+                (product.store?.address || '').toLowerCase().includes(campus)
+            )
+        }
+        if (filters.minPrice !== '') {
+            list = list.filter((product) => product.price >= Number(filters.minPrice))
+        }
+        if (filters.maxPrice !== '') {
+            list = list.filter((product) => product.price <= Number(filters.maxPrice))
+        }
+        if (filters.minRating !== '') {
+            list = list.filter((product) => averageRating(product) >= Number(filters.minRating))
+        }
+
+        switch (sort) {
+            case 'oldest':
+                list.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)); break
+            case 'price_asc':
+                list.sort((a, b) => a.price - b.price); break
+            case 'price_desc':
+                list.sort((a, b) => b.price - a.price); break
+            case 'rating_desc':
+                list.sort((a, b) => averageRating(b) - averageRating(a)); break
+            case 'rating_asc':
+                list.sort((a, b) => averageRating(a) - averageRating(b)); break
+            default:
+                list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        }
+        return list
+    }, [products, filters, sort])
+
+    const activeChips = useMemo(() => {
+        const chips = []
+        if (filters.search.trim()) chips.push({ key: 'search', label: `"${filters.search.trim()}"` })
+        if (filters.category) chips.push({ key: 'category', label: filters.category })
+        if (filters.campus) chips.push({ key: 'campus', label: filters.campus })
+        if (filters.minPrice !== '' || filters.maxPrice !== '') {
+            chips.push({
+                key: 'price',
+                label: `${currency}${filters.minPrice || 0} – ${filters.maxPrice !== '' ? currency + filters.maxPrice : 'any'}`,
             })
+        }
+        if (filters.minRating !== '') chips.push({ key: 'rating', label: `${filters.minRating}+ stars` })
+        return chips
+    }, [filters])
 
-            const { data } = await axios.get(`/api/products?${query.toString()}`)
-            setProducts(data.products || [])
-        } catch (error) {
-            console.log(error)
-            setProducts([])
-        } finally {
-            setLoading(false)
+    const clearChip = (key) => {
+        if (key === 'price') {
+            setFilters((prev) => ({ ...prev, minPrice: '', maxPrice: '' }))
+        } else if (key === 'rating') {
+            onFilterChange('minRating', '')
+        } else if (key === 'search') {
+            onFilterChange('search', '')
+            if (initialSearch) router.push('/shop')
+        } else {
+            onFilterChange(key, '')
         }
     }
 
-    useEffect(() => {
-        setFilters((prev) => ({ ...prev, search: initialSearch }))
-    }, [initialSearch])
+    const hasActiveFilters = activeChips.length > 0
 
-    useEffect(() => {
-        fetchProducts()
-    }, [filters])
-
-    const onFilterChange = (key, value) => {
-        setFilters((prev) => ({ ...prev, [key]: value }))
-    }
-
-    const resetFilters = () => {
-        setFilters({
-            search: '',
-            category: '',
-            campus: '',
-            minPrice: '',
-            maxPrice: '',
-            minRating: '',
-            sort: 'newest',
-        })
-        router.push('/shop')
+    const filterPanelProps = {
+        filters,
+        onFilterChange,
+        onReset: resetFilters,
+        categoryOptions,
+        categoryCounts,
+        campusOptions,
+        priceBounds,
+        hasActiveFilters,
     }
 
     return (
-        <div className="min-h-[70vh] mx-6">
-            <div className=" max-w-7xl mx-auto">
-                <h1 onClick={() => router.push('/shop')} className="text-2xl text-slate-500 my-6 flex items-center gap-2 cursor-pointer"> {filters.search && <MoveLeftIcon size={20} />}  All <span className="text-slate-700 font-medium">Products</span></h1>
+        <div className="mx-4 min-h-[70vh] sm:mx-6">
+            <div className="mx-auto max-w-7xl">
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-slate-50 border border-slate-200 rounded-xl p-4 mb-7">
-                    <select value={filters.category} onChange={(e) => onFilterChange('category', e.target.value)} className="border border-slate-300 rounded p-2 text-sm outline-none">
-                        <option value="">All Categories</option>
-                        {categoryOptions.map((category) => (
-                            <option key={category} value={category}>{category}</option>
-                        ))}
-                    </select>
+                {/* Header: title, mobile filter trigger, sort */}
+                <div className="my-6 flex flex-wrap items-center justify-between gap-3">
+                    <h1
+                        onClick={() => initialSearch && router.push('/shop')}
+                        className={`flex items-center gap-2 text-2xl text-slate-500 ${initialSearch ? 'cursor-pointer' : ''}`}
+                    >
+                        {initialSearch && <MoveLeftIcon size={20} />}
+                        All <span className="font-medium text-slate-700">Products</span>
+                    </h1>
 
-                    <select value={filters.campus} onChange={(e) => onFilterChange('campus', e.target.value)} className="border border-slate-300 rounded p-2 text-sm outline-none">
-                        <option value="">All Campuses</option>
-                        {campusOptions.map((campus) => (
-                            <option key={campus} value={campus}>{campus}</option>
-                        ))}
-                    </select>
+                    <div className="flex items-center gap-2">
+                        {/* Mobile filters drawer */}
+                        <Sheet>
+                            <SheetTrigger asChild>
+                                <Button variant="outline" className="relative lg:hidden">
+                                    <SlidersHorizontalIcon className="size-4" />
+                                    Filters
+                                    {hasActiveFilters && (
+                                        <span className="absolute -right-1.5 -top-1.5 flex size-4.5 items-center justify-center rounded-full bg-green-500 text-[10px] font-semibold text-white">
+                                            {activeChips.length}
+                                        </span>
+                                    )}
+                                </Button>
+                            </SheetTrigger>
+                            <SheetContent side="left" className="w-80 max-w-[85vw] overflow-y-auto">
+                                <SheetHeader>
+                                    <SheetTitle>Filters</SheetTitle>
+                                </SheetHeader>
+                                <div className="px-4 pb-8">
+                                    <ShopFilters {...filterPanelProps} idPrefix="mobile-filters" />
+                                </div>
+                            </SheetContent>
+                        </Sheet>
 
-                    <select value={filters.minRating} onChange={(e) => onFilterChange('minRating', e.target.value)} className="border border-slate-300 rounded p-2 text-sm outline-none">
-                        <option value="">Any Rating</option>
-                        <option value="1">1+ stars</option>
-                        <option value="2">2+ stars</option>
-                        <option value="3">3+ stars</option>
-                        <option value="4">4+ stars</option>
-                    </select>
-
-                    <select value={filters.sort} onChange={(e) => onFilterChange('sort', e.target.value)} className="border border-slate-300 rounded p-2 text-sm outline-none">
-                        <option value="newest">Newest</option>
-                        <option value="oldest">Oldest</option>
-                        <option value="price_asc">Price: Low to High</option>
-                        <option value="price_desc">Price: High to Low</option>
-                        <option value="rating_desc">Top Rated</option>
-                        <option value="rating_asc">Lowest Rated</option>
-                    </select>
-
-                    <input
-                        type="number"
-                        min={0}
-                        placeholder="Min Price"
-                        value={filters.minPrice}
-                        onChange={(e) => onFilterChange('minPrice', e.target.value)}
-                        className="border border-slate-300 rounded p-2 text-sm outline-none"
-                    />
-                    <input
-                        type="number"
-                        min={0}
-                        placeholder="Max Price"
-                        value={filters.maxPrice}
-                        onChange={(e) => onFilterChange('maxPrice', e.target.value)}
-                        className="border border-slate-300 rounded p-2 text-sm outline-none"
-                    />
-                    <input
-                        type="text"
-                        placeholder="Search products"
-                        value={filters.search}
-                        onChange={(e) => onFilterChange('search', e.target.value)}
-                        className="border border-slate-300 rounded p-2 text-sm outline-none sm:col-span-2"
-                    />
-                    <button onClick={resetFilters} className="bg-slate-700 text-white rounded p-2 text-sm hover:bg-slate-900 transition">
-                        Reset Filters
-                    </button>
+                        <Select value={sort} onValueChange={setSort}>
+                            <SelectTrigger className="min-w-40" aria-label="Sort products">
+                                <span className="text-muted-foreground max-sm:hidden text-sm">Sort by</span>
+                                <SelectValue placeholder="Sort" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {sortOptions.map((option) => (
+                                    <SelectItem key={option.key} value={option.key}>
+                                        {option.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
 
-                {loading ? (
-                    <Loading />
-                ) : (
-                    <div className="grid grid-cols-2 sm:flex flex-wrap gap-6 xl:gap-12 mx-auto mb-32">
-                        {products.map((product) => <ProductCard key={product.id} product={product} />)}
-                    </div>
-                )}
+                <div className="lg:grid lg:grid-cols-[240px_1fr] lg:items-start lg:gap-10">
+
+                    {/* Desktop sidebar */}
+                    <aside className="sticky top-24 hidden max-h-[calc(100vh-7rem)] overflow-y-auto pb-8 pr-1 lg:block">
+                        <ShopFilters {...filterPanelProps} />
+                    </aside>
+
+                    <section className="mb-32 min-w-0">
+
+                        {/* Active filter chips + result count */}
+                        {!loading && (
+                            <div className="mb-5 flex flex-wrap items-center gap-2">
+                                <p className="text-sm text-slate-500">
+                                    {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'}
+                                </p>
+                                {activeChips.map((chip) => (
+                                    <Badge
+                                        key={chip.key}
+                                        variant="secondary"
+                                        className="gap-1 rounded-full py-1 pl-3 pr-1.5 font-normal text-slate-600"
+                                    >
+                                        {chip.label}
+                                        <button
+                                            onClick={() => clearChip(chip.key)}
+                                            aria-label={`Remove ${chip.key} filter`}
+                                            className="rounded-full p-0.5 transition-colors hover:bg-slate-300/60"
+                                        >
+                                            <XIcon className="size-3" />
+                                        </button>
+                                    </Badge>
+                                ))}
+                                {hasActiveFilters && (
+                                    <button onClick={resetFilters} className="text-xs text-slate-400 underline-offset-2 transition-colors hover:text-slate-600 hover:underline">
+                                        Clear all
+                                    </button>
+                                )}
+                            </div>
+                        )}
+
+                        {loading ? (
+                            <ProductGridSkeleton />
+                        ) : filteredProducts.length ? (
+                            <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:gap-6">
+                                {filteredProducts.map((product) => <ProductCard key={product.id} product={product} />)}
+                            </div>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 px-6 py-20 text-center">
+                                <PackageSearchIcon className="size-10 text-slate-300" />
+                                <p className="mt-4 font-medium text-slate-700">No products found</p>
+                                <p className="mt-1 max-w-xs text-sm text-slate-500">
+                                    Try adjusting your search or filters to find what you&apos;re looking for.
+                                </p>
+                                {hasActiveFilters && (
+                                    <Button variant="outline" onClick={resetFilters} className="mt-5">
+                                        Reset all filters
+                                    </Button>
+                                )}
+                            </div>
+                        )}
+                    </section>
+                </div>
             </div>
         </div>
     )
