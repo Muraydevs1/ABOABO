@@ -7,9 +7,11 @@ import Loading from "@/components/Loading"
 import { useRouter } from "next/navigation"
 import { useAuth, useUser } from "@clerk/nextjs"
 import axios from "axios"
+import { validateStoreSubmission } from "@/lib/validators"
+import { CAMPUS_OPTIONS } from "@/lib/constants"
 
 export default function CreateStore() {
-    const campusOptions = ["Nyankpala", "Dungu", "City"]
+    const campusOptions = CAMPUS_OPTIONS
     const {user} =useUser();
     const router = useRouter()
     const {getToken} = useAuth()
@@ -20,7 +22,7 @@ export default function CreateStore() {
 
     const [storeInfo, setStoreInfo] = useState({
         name: "",
-        username: "", 
+        username: "",
         description: "",
         email: "",
         contact: "",
@@ -29,10 +31,20 @@ export default function CreateStore() {
         image: "",
         course: ""
     })
+    const [errors, setErrors] = useState({})
 
     const onChangeHandler = (e) => {
         setStoreInfo({ ...storeInfo, [e.target.name]: e.target.value })
+        // clear the field's error as soon as the user edits it
+        if (errors[e.target.name]) setErrors((prev) => ({ ...prev, [e.target.name]: null }))
     }
+
+    const inputClass = (field) =>
+        `border outline-slate-400 w-full max-w-lg p-2 rounded ${errors[field] ? 'border-red-400' : 'border-slate-300'}`
+
+    const FieldError = ({ field }) => errors[field]
+        ? <p className="text-xs text-red-500">{errors[field]}</p>
+        : null
 
     const fetchSellerStatus = async () => {
         // Logic to check if the store is already submitted
@@ -77,24 +89,37 @@ export default function CreateStore() {
         if(!user){
             return toast("please login to continue")
         }
+
+        // Client-side validation with inline errors — same rules the API
+        // enforces. The form data is never cleared on failure.
+        const result = validateStoreSubmission(storeInfo)
+        if (!result.valid) {
+            setErrors(result.errors)
+            toast.error(result.error)
+            return
+        }
+        setErrors({})
+
         try {
             const token = await getToken();
             const formData = new FormData();
-            formData.append("name", storeInfo.name)
-            formData.append("description", storeInfo.description)
-            formData.append("username", storeInfo.username)
-            formData.append("email", storeInfo.email)
-            formData.append("address", storeInfo.address)
-            formData.append("campus", storeInfo.campus)
-            formData.append("contact", storeInfo.contact)
-            formData.append("image", storeInfo.image)
-            formData.append("course", storeInfo.course)
+            // send the normalized values (trimmed, phone as 0XXXXXXXXX, course ID uppercased)
+            formData.append("name", result.value.name)
+            formData.append("description", result.value.description)
+            formData.append("username", result.value.username)
+            formData.append("email", result.value.email)
+            formData.append("address", result.value.address)
+            formData.append("campus", result.value.campus)
+            formData.append("contact", result.value.contact)
+            formData.append("image", result.value.image)
+            formData.append("course", result.value.course)
 
-            const {data} = await axios.post('/api/store/create', formData, 
+            const {data} = await axios.post('/api/store/create', formData,
                 {headers: {Authorization: `Bearer ${token}`}})
             toast.success(data.message)
             await fetchSellerStatus()
         } catch (error) {
+            if (error?.response?.data?.errors) setErrors(error.response.data.errors)
             toast.error(error?.response?.data?.error || error.message)
         }
 
@@ -128,37 +153,46 @@ export default function CreateStore() {
                         <label className="mt-10 cursor-pointer">
                             Store Logo
                             <Image src={storeInfo.image ? URL.createObjectURL(storeInfo.image) : assets.upload_area} className="rounded-lg mt-2 h-16 w-auto" alt="" width={150} height={100} />
-                            <input type="file" accept="image/*" onChange={(e) => setStoreInfo({ ...storeInfo, image: e.target.files[0] })} hidden />
+                            <input type="file" accept="image/*" onChange={(e) => { setStoreInfo({ ...storeInfo, image: e.target.files[0] }); if (errors.image) setErrors((prev) => ({ ...prev, image: null })) }} hidden />
                         </label>
+                        <FieldError field="image" />
 
                         <p>Username</p>
-                        <input name="username" onChange={onChangeHandler} value={storeInfo.username} type="text" placeholder="Enter your store username" className="border border-slate-300 outline-slate-400 w-full max-w-lg p-2 rounded" />
+                        <input name="username" onChange={onChangeHandler} value={storeInfo.username} type="text" placeholder="Enter your store username" className={inputClass('username')} />
+                        <FieldError field="username" />
 
                         <p>Name</p>
-                        <input name="name" onChange={onChangeHandler} value={storeInfo.name} type="text" placeholder="Enter your store name" className="border border-slate-300 outline-slate-400 w-full max-w-lg p-2 rounded" />
+                        <input name="name" onChange={onChangeHandler} value={storeInfo.name} type="text" placeholder="Enter your store name" className={inputClass('name')} />
+                        <FieldError field="name" />
 
                         <p>Course ID</p>
-                        <input name="course" onChange={onChangeHandler} value={storeInfo.course} type="text" placeholder="Enter your Course ID" className="border border-slate-300 outline-slate-400 w-full max-w-lg p-2 rounded" />
+                        <input name="course" onChange={onChangeHandler} value={storeInfo.course} type="text" placeholder="Enter your Course ID (e.g. CSC/0012/23)" className={inputClass('course')} />
+                        <FieldError field="course" />
 
                         <p>Description</p>
-                        <textarea name="description" onChange={onChangeHandler} value={storeInfo.description} rows={5} placeholder="Enter your store description" className="border border-slate-300 outline-slate-400 w-full max-w-lg p-2 rounded resize-none" />
+                        <textarea name="description" onChange={onChangeHandler} value={storeInfo.description} rows={5} placeholder="Enter your store description" className={`${inputClass('description')} resize-none`} />
+                        <FieldError field="description" />
 
                         <p>Email</p>
-                        <input name="email" onChange={onChangeHandler} value={storeInfo.email} type="email" placeholder="Enter your email" className="border border-slate-300 outline-slate-400 w-full max-w-lg p-2 rounded" />
+                        <input name="email" onChange={onChangeHandler} value={storeInfo.email} type="email" placeholder="Enter your email" className={inputClass('email')} />
+                        <FieldError field="email" />
 
                         <p>Contact Number</p>
-                        <input name="contact" onChange={onChangeHandler} value={storeInfo.contact} type="text" placeholder="Enter your contact number" className="border border-slate-300 outline-slate-400 w-full max-w-lg p-2 rounded" />
+                        <input name="contact" onChange={onChangeHandler} value={storeInfo.contact} type="tel" placeholder="e.g. 0241234567" className={inputClass('contact')} />
+                        <FieldError field="contact" />
 
                         <p>Campus</p>
-                        <select name="campus" onChange={onChangeHandler} value={storeInfo.campus} className="border border-slate-300 outline-slate-400 w-full max-w-lg p-2 rounded bg-white" required>
+                        <select name="campus" onChange={onChangeHandler} value={storeInfo.campus} className={`${inputClass('campus')} bg-white`} required>
                             <option value="" disabled>Select campus</option>
                             {campusOptions.map((campus) => (
                                 <option key={campus} value={campus}>{campus}</option>
                             ))}
                         </select>
+                        <FieldError field="campus" />
 
                         <p>Address</p>
-                        <textarea name="address" onChange={onChangeHandler} value={storeInfo.address} rows={5} placeholder="Enter your address/Location" className="border border-slate-300 outline-slate-400 w-full max-w-lg p-2 rounded resize-none" />
+                        <textarea name="address" onChange={onChangeHandler} value={storeInfo.address} rows={5} placeholder="Enter your address/Location" className={`${inputClass('address')} resize-none`} />
+                        <FieldError field="address" />
 
                         <button className="bg-slate-800 text-white px-12 py-2 rounded mt-10 mb-40 active:scale-95 hover:bg-slate-900 transition ">Submit</button>
                     </form>

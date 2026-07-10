@@ -40,6 +40,14 @@ model Product {
     store      Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
     orderItems OrderItem[]
     rating     Rating[]
+
+    // storeId: Postgres does not index FK columns automatically; every product
+    // query joins/filters on the store relation (isActive check, store pages).
+    @@index([storeId])
+    // Main catalog listing: WHERE inStock ORDER BY createdAt DESC.
+    @@index([inStock, createdAt(sort: Desc)])
+    // Category filtering (equality lookups as the catalog grows).
+    @@index([category])
 }
 
 enum OrderStatus {
@@ -107,6 +115,9 @@ model Rating {
     product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
     @@unique([userId, productId, orderId])
+    // Ratings are always loaded per product (include: { rating }); the unique
+    // above leads with userId so it cannot serve productId lookups.
+    @@index([productId])
 }
 
 // Required for creating an Address: userId, name, email, street, city, state, zip, country, phone

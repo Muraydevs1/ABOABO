@@ -1,10 +1,8 @@
 import { imagekit, UPLOAD_PRE_TRANSFORMATION, buildImageUrl } from '@/configs/imageKit';
 import { prisma } from '@/lib/prisma';
-import { validateCourseId } from '@/lib/utils/courseId';
+import { validateStoreSubmission } from '@/lib/validators';
 import {getAuth} from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
-
-const ALLOWED_CAMPUSES = ["Nyankpala", "Dungu", "City"];
 
 // create store
 
@@ -18,33 +16,25 @@ export async function POST (request){
         // getting data from form
         const formData = await request.formData()
 
-        const name = formData.get('name')
-        const userName = formData.get('username')
-        const description = formData.get('description')
-        const email = formData.get('email')
-        const contact = formData.get('contact')
-        const address = formData.get('address')
-        const campus = formData.get('campus')?.trim()
-        const courseRaw = formData.get('course')
-        const image = formData.get('image')
+        // Full validation + normalization (required fields, email, Ghana phone,
+        // course ID with admission year, campus allow-list, image MIME/size).
+        const result = validateStoreSubmission({
+            name: formData.get('name'),
+            username: formData.get('username'),
+            description: formData.get('description'),
+            email: formData.get('email'),
+            contact: formData.get('contact'),
+            address: formData.get('address'),
+            campus: formData.get('campus'),
+            course: formData.get('course'),
+            image: formData.get('image'),
+        })
 
-        const { isValid, courseId: course, error: courseIdError } = validateCourseId(courseRaw || "")
-
-        if (!name || !userName || !description || !email || !contact || !address || !campus || !image || !courseRaw){
-            return NextResponse.json({error:"Missing Store Info"}, {status:400})
+        if (!result.valid){
+            return NextResponse.json({error: result.error, errors: result.errors}, {status:400})
         }
 
-        if (!ALLOWED_CAMPUSES.includes(campus)) {
-            return NextResponse.json({error: "Invalid campus selected"}, {status:400})
-        }
-
-        if (!isValid){
-            return NextResponse.json(
-                {error: courseIdError},
-                {status:400}
-            )
-        }
-
+        const { name, username: userName, description, email, contact, address, campus, course, image } = result.value
 
         // check duplicate courseID
         const existingCourseId = await prisma.store.findFirst({

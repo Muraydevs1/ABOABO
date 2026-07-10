@@ -55,11 +55,21 @@ export async function POST(request) {
         const allowedPaymentMethods = ['COD', 'MoMo']
          
     // CHECK IF REQUIRED FIELDS ARE PRESENT
-        if(!addressId || !items || items.length === 0 || !paymentMethod){
+        if(typeof addressId !== 'string' || !addressId || !Array.isArray(items) || items.length === 0 || !paymentMethod){
             return new Response(JSON.stringify({error: "missing required fields"}), {status: 400})
         }
         if(!allowedPaymentMethods.includes(paymentMethod)){
             return new Response(JSON.stringify({error: "invalid payment method"}), {status: 400})
+        }
+
+        // The delivery address must exist and belong to the buyer — otherwise
+        // orders could be created against another user's address record.
+        const address = await prisma.address.findFirst({
+            where: { id: addressId, userId },
+            select: { id: true },
+        })
+        if (!address) {
+            return new Response(JSON.stringify({error: "invalid delivery address"}), {status: 400})
         }
         const user = await prisma.user.findUnique({
             where: { id: userId },
@@ -74,6 +84,10 @@ export async function POST(request) {
         const MAX_QUANTITY_PER_ITEM = 100
         const ordersbyStore = new Map()
         for(const item of items){
+            if (!item || typeof item.id !== 'string' || !item.id) {
+                return new Response(JSON.stringify({ error: "invalid item in order" }), { status: 400 })
+            }
+
             // Validate quantity: integer, > 0, within a sane maximum
             const quantity = Number(item.quantity)
             if (!Number.isInteger(quantity) || quantity <= 0 || quantity > MAX_QUANTITY_PER_ITEM) {

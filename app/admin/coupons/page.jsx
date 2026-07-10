@@ -6,6 +6,7 @@ import { DeleteIcon } from "lucide-react"
 import { couponDummyData } from "@/assets/assets"
 import { useAuth } from "@clerk/nextjs"
 import axios from "axios"
+import { validateCoupon } from "@/lib/validators"
 
 export default function AdminCoupons() {
 
@@ -38,12 +39,18 @@ export default function AdminCoupons() {
     const handleAddCoupon = async (e) => {
         e.preventDefault()
         // Logic to add a coupon
+
+        // Same rules the API enforces: code format, discount 0-100, future expiry.
+        const result = validateCoupon(newCoupon)
+        if (!result.valid) {
+            toast.error(result.error)
+            return
+        }
+
         try {
             const token = await getToken()
 
-            newCoupon.discount = Number(newCoupon.discount)
-            newCoupon.expiresAt = new Date(newCoupon.expiresAt)
-            const {data} = await axios.post('/api/admin/coupon',{coupon: newCoupon}, {headers:{
+            const {data} = await axios.post('/api/admin/coupon',{coupon: result.value}, {headers:{
                 Authorization:`Bearer ${token}`
             }})
             toast.success(data.message)

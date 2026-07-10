@@ -1,5 +1,6 @@
 import { inngest } from "@/inngest/client";
 import { prisma } from "@/lib/prisma";
+import { validateCoupon } from "@/lib/validators";
 import authAdmin from "@/middlewares/authAdmin";
 import { getAuth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
@@ -10,8 +11,6 @@ import { NextResponse } from "next/server";
 export async function POST(request) {
     try {
         const {userId} = getAuth(request)
-        console.log("USER ID:", userId);
-        
         const isAdmin = await authAdmin(userId)
 
         if (!isAdmin){
@@ -19,9 +18,15 @@ export async function POST(request) {
         }
 
         const {coupon} = await request.json()
-        coupon.code = coupon.code.toUpperCase()
 
-        await prisma.coupon.create({data: coupon}).then(async(coupon)=>{
+        // Validate + allow-list: only known coupon fields reach the DB
+        // (code format, description, discount 0-100, future expiry).
+        const result = validateCoupon(coupon)
+        if (!result.valid){
+            return NextResponse.json({error: result.error, errors: result.errors}, {status: 400})
+        }
+
+        await prisma.coupon.create({data: result.value}).then(async(coupon)=>{
             // Run Inngest Scheduler Function to delete coupon on expire
             await inngest.send({
                 name:'app/coupon.expired',
@@ -49,8 +54,12 @@ export async function DELETE(request) {
             return NextResponse.json({error:"not authorised"}, {status: 401})
         }
 
-        const {searchParams} = request.nextUrl; 
-        const code = searchParams.get('code')
+        const {searchParams} = request.nextUrl;
+        const code = searchParams.get('code')?.trim().toUpperCase()
+
+        if (!code){
+            return NextResponse.json({error: "Coupon code is required"}, {status: 400})
+        }
 
         await prisma.coupon.delete({where:{code}})
         return NextResponse.json({message:'Coupon deleted successfully'})
