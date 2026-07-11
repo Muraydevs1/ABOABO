@@ -7,6 +7,7 @@ import { useState } from "react"
 import { toast } from "react-hot-toast"
 import { validateProductSubmission } from "@/lib/validators"
 import { validateImageFile } from "@/lib/utils/fieldValidation"
+import { prepareImageForUpload } from "@/lib/utils/imageUpload"
 import { PRODUCT_CATEGORIES } from "@/lib/constants"
 
 export default function StoreAddProduct() {
@@ -42,9 +43,16 @@ export default function StoreAddProduct() {
         : null
 
     const handleUseAI = async (file, key) => {
-        // Reject bad files immediately with a friendly message instead of a
-        // server error after upload.
+        // Convert iPhone HEIC photos to JPEG and shrink oversized files
+        // first, then reject anything still unsupported with a friendly
+        // message instead of a server error after upload.
         if (file) {
+            try {
+                file = await prepareImageForUpload(file)
+            } catch (error) {
+                toast.error(error.message)
+                return
+            }
             const check = validateImageFile(file, { label: 'Product image' })
             if (!check.isValid) {
                 toast.error(check.error)
@@ -154,7 +162,7 @@ export default function StoreAddProduct() {
                             src={images[key] instanceof File ? URL.createObjectURL(images[key]) : assets.upload_area}
                             alt=""
                         />
-                        <input type="file" accept='image/*' id={`images${key}`} onChange={e => handleUseAI(e.target.files[0], key)} hidden />
+                        <input type="file" accept='image/*,.heic,.heif' id={`images${key}`} onChange={e => handleUseAI(e.target.files[0], key)} hidden />
                     </label>
                 ))}
             </div>

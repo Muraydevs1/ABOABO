@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation"
 import { useAuth, useUser } from "@clerk/nextjs"
 import axios from "axios"
 import { validateStoreSubmission } from "@/lib/validators"
+import { prepareImageForUpload } from "@/lib/utils/imageUpload"
 import { CAMPUS_OPTIONS } from "@/lib/constants"
 
 export default function CreateStore() {
@@ -41,6 +42,20 @@ export default function CreateStore() {
 
     const inputClass = (field) =>
         `border outline-slate-400 w-full max-w-lg p-2 rounded ${errors[field] ? 'border-red-400' : 'border-slate-300'}`
+
+    // Convert iPhone HEIC photos to JPEG (and shrink oversized files) as soon
+    // as the logo is picked, so the preview renders and validation passes.
+    const onLogoChange = async (e) => {
+        const picked = e.target.files[0]
+        if (!picked) return
+        try {
+            const file = await prepareImageForUpload(picked)
+            setStoreInfo((prev) => ({ ...prev, image: file }))
+            if (errors.image) setErrors((prev) => ({ ...prev, image: null }))
+        } catch (error) {
+            toast.error(error.message)
+        }
+    }
 
     const FieldError = ({ field }) => errors[field]
         ? <p className="text-xs text-red-500">{errors[field]}</p>
@@ -153,7 +168,7 @@ export default function CreateStore() {
                         <label className="mt-10 cursor-pointer">
                             Store Logo
                             <Image src={storeInfo.image ? URL.createObjectURL(storeInfo.image) : assets.upload_area} className="rounded-lg mt-2 h-16 w-auto" alt="" width={150} height={100} />
-                            <input type="file" accept="image/*" onChange={(e) => { setStoreInfo({ ...storeInfo, image: e.target.files[0] }); if (errors.image) setErrors((prev) => ({ ...prev, image: null })) }} hidden />
+                            <input type="file" accept="image/*,.heic,.heif" onChange={onLogoChange} hidden />
                         </label>
                         <FieldError field="image" />
 

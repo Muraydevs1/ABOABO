@@ -18,10 +18,12 @@ const INGEST_TRANSFORMATION = [
 ];
 
 // DELIVERY (buildSrc): shared by product images and store logos so both are
-// generated identically.
+// generated identically. `format: 'auto'` lets ImageKit negotiate AVIF/WebP/
+// JPEG per browser — unlike the ingest transform above, which stores a fixed
+// WebP master and must stay that way.
 const DELIVERY_TRANSFORMATION = [
   { quality: 'auto' },
-  { format: 'webp' },
+  { format: 'auto' },
   { width: '1024' },
 ];
 
