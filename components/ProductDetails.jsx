@@ -35,7 +35,7 @@ const ProductDetails = ({ product }) => {
                 <div className="flex sm:flex-col gap-3 max-sm:overflow-x-auto max-sm:w-full no-scrollbar">
                     {product.images.map((image, index) => (
                         <div key={index} onClick={() => setMainImage(product.images[index])} className="bg-slate-100 flex items-center justify-center size-26 shrink-0 rounded-lg group cursor-pointer">
-                            <Image src={ikImage(image, { width: 200 })} className="group-hover:scale-103 group-active:scale-95 transition" alt="" width={45} height={45} />
+                            <Image src={ikImage(image, { width: 112 })} className="group-hover:scale-103 group-active:scale-95 transition" alt="" width={45} height={45} />
                         </div>
                     ))}
                 </div>

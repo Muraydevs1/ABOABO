@@ -2,6 +2,7 @@
 import Banner from "@/components/Banner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import MobileDock from "@/components/MobileDock";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchProducts } from "@/lib/features/product/productSlice";
@@ -43,6 +44,9 @@ export default function PublicLayout({ children }) {
             <Navbar />
             {children}
             <Footer />
+            {/* Spacer so the floating dock never covers the end of the page on mobile */}
+            <div className="h-24 md:hidden" aria-hidden="true" />
+            <MobileDock />
         </>
     );
 }

@@ -1,13 +1,13 @@
 'use client'
-import { assets } from "@/assets/assets"
 import { useEffect, useState } from "react"
-import Image from "next/image"
+import StoreLogoUploader from "@/components/store/StoreLogoUploader"
 import toast from "react-hot-toast"
 import Loading from "@/components/Loading"
 import { useRouter } from "next/navigation"
 import { useAuth, useUser } from "@clerk/nextjs"
 import axios from "axios"
 import { validateStoreSubmission } from "@/lib/validators"
+import { prepareImageForUpload } from "@/lib/utils/imageUpload"
 import { CAMPUS_OPTIONS } from "@/lib/constants"
 
 export default function CreateStore() {
@@ -41,6 +41,23 @@ export default function CreateStore() {
 
     const inputClass = (field) =>
         `border outline-slate-400 w-full max-w-lg p-2 rounded ${errors[field] ? 'border-red-400' : 'border-slate-300'}`
+
+    // Convert iPhone HEIC photos to JPEG (and shrink oversized files) as soon
+    // as the logo is picked, so the preview renders and validation passes.
+    const onLogoSelect = async (picked) => {
+        if (!picked) return
+        try {
+            const file = await prepareImageForUpload(picked)
+            setStoreInfo((prev) => ({ ...prev, image: file }))
+            if (errors.image) setErrors((prev) => ({ ...prev, image: null }))
+        } catch (error) {
+            toast.error(error.message)
+        }
+    }
+
+    const onLogoRemove = () => {
+        setStoreInfo((prev) => ({ ...prev, image: "" }))
+    }
 
     const FieldError = ({ field }) => errors[field]
         ? <p className="text-xs text-red-500">{errors[field]}</p>
@@ -150,11 +167,8 @@ export default function CreateStore() {
                             <p className="max-w-lg">To become a seller on AboaBo, submit your store details for review. Your store will be activated after admin verification.</p>
                         </div>
 
-                        <label className="mt-10 cursor-pointer">
-                            Store Logo
-                            <Image src={storeInfo.image ? URL.createObjectURL(storeInfo.image) : assets.upload_area} className="rounded-lg mt-2 h-16 w-auto" alt="" width={150} height={100} />
-                            <input type="file" accept="image/*" onChange={(e) => { setStoreInfo({ ...storeInfo, image: e.target.files[0] }); if (errors.image) setErrors((prev) => ({ ...prev, image: null })) }} hidden />
-                        </label>
+                        <p className="mt-10">Store Logo</p>
+                        <StoreLogoUploader image={storeInfo.image || null} onSelect={onLogoSelect} onRemove={onLogoRemove} />
                         <FieldError field="image" />
 
                         <p>Username</p>

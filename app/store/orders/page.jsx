@@ -4,6 +4,7 @@ import Loading from "@/components/Loading"
 import { orderDummyData } from "@/assets/assets"
 import { useAuth } from "@clerk/nextjs"
 import axios from "axios"
+import { ikImage } from "@/lib/imageUrl"
 import { fi } from "date-fns/locale"
 import toast from "react-hot-toast"
 
@@ -157,8 +158,9 @@ export default function StoreOrders() {
                                 {selectedOrder.orderItems.map((item, i) => (
                                     <div key={i} className="flex items-center gap-4 border border-slate-100 shadow rounded p-2">
                                         <img
-                                            src={item.product.images?.[0].src || item.product.images?.[0]}
+                                            src={ikImage(item.product.images?.[0]?.src || item.product.images?.[0], { width: 128 })}
                                             alt={item.product?.name}
+                                            loading="lazy"
                                             className="w-16 h-16 object-cover rounded"
                                         />
                                         <div className="flex-1">

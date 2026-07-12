@@ -21,6 +21,7 @@
     "@commercn": "https://commercn.com/r/{name}.json",
     "@bundui": {
       "url": "https://bundui.io/api/registry/{name}.json"
-    }
+    },
+    "@elements": "https://www.tryelements.dev/r/{name}.json"
   }
 }
