@@ -1,5 +1,5 @@
 import { openai } from "@/configs/openAi";
-import { ALLOWED_IMAGE_TYPES } from "@/lib/utils/fieldValidation";
+import { AI_SAFE_IMAGE_TYPES } from "@/lib/utils/fieldValidation";
 import authSeller from "@/middlewares/authSeller";
 import { getAuth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
@@ -73,7 +73,7 @@ export async function POST(request) {
 
         // Validate before spending AI credits: image type allow-list and a
         // size cap (~10MB of base64) so the endpoint can't be abused.
-        if (!ALLOWED_IMAGE_TYPES.includes(mimeType)) {
+        if (!AI_SAFE_IMAGE_TYPES.includes(mimeType)) {
             return NextResponse.json({error: "Image must be a JPEG, PNG, WebP, GIF or AVIF"}, {status: 400});
         }
         if (typeof base64Image !== 'string' || base64Image.length === 0 || base64Image.length > 14_000_000) {

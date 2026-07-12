@@ -1,7 +1,6 @@
 'use client'
-import { assets } from "@/assets/assets"
 import { useEffect, useState } from "react"
-import Image from "next/image"
+import StoreLogoUploader from "@/components/store/StoreLogoUploader"
 import toast from "react-hot-toast"
 import Loading from "@/components/Loading"
 import { useRouter } from "next/navigation"
@@ -45,8 +44,7 @@ export default function CreateStore() {
 
     // Convert iPhone HEIC photos to JPEG (and shrink oversized files) as soon
     // as the logo is picked, so the preview renders and validation passes.
-    const onLogoChange = async (e) => {
-        const picked = e.target.files[0]
+    const onLogoSelect = async (picked) => {
         if (!picked) return
         try {
             const file = await prepareImageForUpload(picked)
@@ -55,6 +53,10 @@ export default function CreateStore() {
         } catch (error) {
             toast.error(error.message)
         }
+    }
+
+    const onLogoRemove = () => {
+        setStoreInfo((prev) => ({ ...prev, image: "" }))
     }
 
     const FieldError = ({ field }) => errors[field]
@@ -165,11 +167,8 @@ export default function CreateStore() {
                             <p className="max-w-lg">To become a seller on AboaBo, submit your store details for review. Your store will be activated after admin verification.</p>
                         </div>
 
-                        <label className="mt-10 cursor-pointer">
-                            Store Logo
-                            <Image src={storeInfo.image ? URL.createObjectURL(storeInfo.image) : assets.upload_area} className="rounded-lg mt-2 h-16 w-auto" alt="" width={150} height={100} />
-                            <input type="file" accept="image/*,.heic,.heif" onChange={onLogoChange} hidden />
-                        </label>
+                        <p className="mt-10">Store Logo</p>
+                        <StoreLogoUploader image={storeInfo.image || null} onSelect={onLogoSelect} onRemove={onLogoRemove} />
                         <FieldError field="image" />
 
                         <p>Username</p>
